@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: saude_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - saude_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  saude_postgres_data:
