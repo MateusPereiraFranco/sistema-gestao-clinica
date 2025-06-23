@@ -1,3 +1,4 @@
+export type PatientVinculo = 'educação' | 'saude' | 'AMA' | 'nenhum';
 export interface Patient {
     patient_id: string;
     name: string;
@@ -14,6 +15,7 @@ export interface Patient {
     city: string;
     state: string;
     observations: string | null;
+    vinculo: PatientVinculo;
 }
 
 export type AppointmentStatus = 
@@ -33,6 +35,7 @@ export interface Appointment {
     patient_id: string;
     patient_name: string;
     observations: string | null;
+    vinculo: PatientVinculo;
 }
 
 

@@ -1,13 +1,6 @@
 const appointmentModel = require('./appointmentsModel');
 const userModel = require('../users/usersModel');
-
-/**
- * Obtém a agenda do dia para um profissional.
- * @param {string} professionalId - O UUID do profissional.
- */
-exports.getTodaysAgendaForProfessional = async (professionalId) => {
-    return appointmentModel.findTodaysByProfessionalId(professionalId);
-};
+const db = require('../../config/db'); // <-- CORREÇÃO: Importação adicionada
 
 exports.getAppointmentsByProfessionalAndDate = async (professionalId, date) => {
     if (!professionalId || !date) {
@@ -19,7 +12,7 @@ exports.getAppointmentsByProfessionalAndDate = async (professionalId, date) => {
 };
 
 exports.createAppointment = async (appointmentData) => {
-    const { professional_id, appointment_datetime, patient_id, observations } = appointmentData; // observações é opcional
+    const { professional_id, appointment_datetime, patient_id, observations } = appointmentData;
 
     if (!professional_id || !appointment_datetime || !patient_id) {
         const error = new Error('Dados insuficientes para criar o agendamento.');
@@ -41,11 +34,17 @@ exports.createAppointment = async (appointmentData) => {
         throw error;
     }
 
+    // Busca os dados da especialidade do profissional para usar no agendamento.
+    const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [professional.specialty_id]);
+    const specialtyName = specialtyResponse.rows[0]?.name || 'Atendimento Geral';
+
     const fullAppointmentData = {
-        ...appointmentData,
+        patient_id: patient_id,
+        professional_id: professional_id,
         unit_id: professional.unit_id,
-        service_type: professional.specialty_name || 'Atendimento Geral',
-        observations: observations || null, // Garante que é nulo se não for fornecido
+        appointment_datetime: appointment_datetime,
+        service_type: specialtyName,
+        observations: observations || null,
     };
 
     return appointmentModel.create(fullAppointmentData);
@@ -53,7 +52,11 @@ exports.createAppointment = async (appointmentData) => {
 
 exports.checkIn = async (appointmentId) => {
     const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment) throw new Error('Agendamento não encontrado.');
+    if (!appointment) {
+        const error = new Error('Agendamento não encontrado.');
+        error.statusCode = 404;
+        throw error;
+    }
     if (appointment.status !== 'scheduled') {
         throw new Error(`Não é possível fazer check-in de um agendamento com status '${appointment.status}'.`);
     }
@@ -62,7 +65,11 @@ exports.checkIn = async (appointmentId) => {
 
 exports.markAsMissed = async (appointmentId, isJustified, observation) => {
     const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment) throw new Error('Agendamento não encontrado.');
+    if (!appointment) {
+        const error = new Error('Agendamento não encontrado.');
+        error.statusCode = 404;
+        throw error;
+    }
     const newStatus = isJustified ? 'justified_absence' : 'unjustified_absence';
     return appointmentModel.updateStatus(appointmentId, newStatus, observation);
 };

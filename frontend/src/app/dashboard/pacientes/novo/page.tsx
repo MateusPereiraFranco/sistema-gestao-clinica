@@ -8,7 +8,9 @@ export default function NovoPacientePage() {
         <>
             <Header title="Novo Paciente" />
             <main className="flex-1 overflow-y-auto p-6">
-                <PatientForm />
+                <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+                    <PatientForm />
+                </div>
             </main>
         </>
     );

@@ -19,7 +19,6 @@ export default function EditarPacientePage() {
         if (patientId) {
             const fetchPatient = async () => {
                 try {
-                    // Chama a nova rota dedicada para edição
                     const response = await api.get(`/patients/${patientId}/for-edit`);
                     setPatient(response.data);
                 } catch (err) {

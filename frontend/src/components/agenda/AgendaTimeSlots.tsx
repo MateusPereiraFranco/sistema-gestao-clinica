@@ -1,6 +1,6 @@
 'use client';
 
-import { Appointment } from "@/types";
+import { Appointment, PatientVinculo} from "@/types";
 import { Clock, Plus, MessageSquare, CheckCircle, UserX, UserCheck, Stethoscope, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -11,6 +11,16 @@ interface AgendaTimeSlotsProps {
     onCheckIn: (appointmentId: string) => void;
     onMarkAsMissed: (appointment: Appointment) => void;
     onScheduleClick: (slot: string) => void;
+}
+
+// Função auxiliar para obter a cor do vínculo
+const getVinculoStyle = (vinculo: PatientVinculo | null) => {
+    switch (vinculo) {
+        case 'saude': return { borderColor: 'border-blue-500', textColor: 'text-blue-700' };
+        case 'educação': return { borderColor: 'border-green-500', textColor: 'text-green-700' };
+        case 'AMA': return { borderColor: 'border-pink-500', textColor: 'text-pink-700' };
+        default: return { borderColor: 'border-indigo-500', textColor: 'text-indigo-700' };
+    }
 }
 
 const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
@@ -26,18 +36,14 @@ const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${info.style}`}>{info.text}</span>;
 };
 
-export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onScheduleClick }: AgendaTimeSlotsProps) {
+export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onScheduleClick }: any) {
     const [expandedObservationId, setExpandedObservationId] = useState<string | null>(null);
-
-    const timeSlots = Array.from({ length: 20 }, (_, i) => {
-        const hour = 8 + Math.floor((i * 30) / 60);
-        const minute = (i * 30) % 60;
-        return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-    });
+    const timeSlots = Array.from({ length: 20 }, (_, i) => `${String(8 + Math.floor((i * 30) / 60)).padStart(2, '0')}:${String((i * 30) % 60).padStart(2, '0')}`);
 
     const handleToggleObservation = (appointmentId: string) => {
         setExpandedObservationId(prevId => (prevId === appointmentId ? null : appointmentId));
     };
+    
     
     if (isLoading) {
         return <div className="text-center p-10 text-gray-500">A carregar agenda...</div>;
@@ -46,42 +52,34 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {timeSlots.map(slot => {
-                const appointment = appointments.find(app => app.time === slot);
+                const appointment = appointments.find((app: Appointment) => app.time === slot);
                 
                 if (appointment) {
+                    const vinculoStyle = getVinculoStyle(appointment.vinculo);
                     const isExpanded = expandedObservationId === appointment.appointment_id;
                     return (
-                        <div key={slot} className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-indigo-500 flex flex-col justify-between">
+                        <div key={slot} className={`bg-white p-4 rounded-lg shadow-sm border-l-4 ${vinculoStyle.borderColor} flex flex-col justify-between`}>
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <p className="font-bold text-gray-800 flex items-center gap-2"><Clock size={16} /> {slot}</p>
-                                    <StatusBadge status={appointment.status} />
+                                    {/* <StatusBadge status={appointment.status} /> */}
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-indigo-700 truncate">{appointment.patient_name}</p>
+                                    <p className={`font-semibold truncate ${vinculoStyle.textColor}`}>{appointment.patient_name}</p>
                                     <p className="text-sm text-gray-500">{appointment.service_type}</p>
                                 </div>
                             </div>
                             
                             <div className="mt-3 pt-3 border-t space-y-2">
-                                {/* Secção de Observação Expansível */}
                                 {appointment.observations && (
                                     <div>
-                                        <button 
-                                            onClick={() => handleToggleObservation(appointment.appointment_id)}
-                                            className="w-full flex justify-between items-center text-xs text-gray-500 hover:text-indigo-600 font-semibold"
-                                        >
+                                        <button onClick={() => handleToggleObservation(appointment.appointment_id)} className="w-full flex justify-between items-center text-xs text-gray-500 hover:text-indigo-600 font-semibold">
                                             {isExpanded ? 'Ocultar Observação' : 'Ver Observação'}
                                             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                         </button>
-                                        {isExpanded && (
-                                            <p className="mt-2 text-sm text-gray-700 bg-gray-100 p-2 rounded-md">
-                                                {appointment.observations}
-                                            </p>
-                                        )}
+                                        {isExpanded && <p className="mt-2 text-sm text-gray-700 bg-gray-100 p-2 rounded-md">{appointment.observations}</p>}
                                     </div>
                                 )}
-                                
                                 {/* Botões de Ação Reativos */}
                                 <div className="flex justify-end gap-2">
                                     {appointment.status === 'scheduled' && (
@@ -107,10 +105,7 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                     return (
                         <div key={slot} className="bg-gray-50/70 p-4 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-between transition hover:border-indigo-400 hover:bg-indigo-50">
                              <p className="font-bold text-gray-500 flex items-center gap-2"><Clock size={16} /> {slot}</p>
-                             <button 
-                                onClick={() => onScheduleClick(slot)}
-                                className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800"
-                            >
+                             <button onClick={() => onScheduleClick(slot)} className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800">
                                 <Plus size={16} />
                                 Agendar
                              </button>

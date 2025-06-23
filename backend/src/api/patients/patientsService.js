@@ -18,7 +18,8 @@ exports.getPatientForEdit = async (id) => {
 exports.createPatient = async (patientData, userId) => {
     const requiredFields = [
         'name', 'birth_date', 'mother_name', 'cell_phone_1',
-        'cep', 'street', 'number', 'neighborhood', 'city', 'state'
+        'cep', 'street', 'number', 'neighborhood', 'city', 'state',
+        'vinculo' // <-- Adicionado à lista de campos obrigatórios
     ];
 
     for (const field of requiredFields) {

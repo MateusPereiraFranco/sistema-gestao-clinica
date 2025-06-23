@@ -1,22 +1,7 @@
 const appointmentService = require('./appointmentsService');
 
-/**
- * Controller para obter a agenda do dia do profissional autenticado.
- */
-exports.getMyAgenda = async (req, res, next) => {
-    try {
-        // O ID do utilizador vem do token JWT, garantindo que ele só vê a sua própria agenda.
-        const professionalId = req.user.user_id;
-        const agenda = await appointmentService.getTodaysAgendaForProfessional(professionalId);
-        res.status(200).json(agenda);
-    } catch (error) {
-        next(error);
-    }
-};
-
 exports.getAppointments = async (req, res, next) => {
     try {
-        // Ex: /api/appointments?professionalId=...&date=2025-06-22
         const { professionalId, date } = req.query;
         const appointments = await appointmentService.getAppointmentsByProfessionalAndDate(professionalId, date);
         res.status(200).json(appointments);
@@ -27,6 +12,7 @@ exports.getAppointments = async (req, res, next) => {
 
 exports.createAppointment = async (req, res, next) => {
     try {
+        // CORREÇÃO: Garantir que estamos a chamar o serviço correto de agendamentos.
         const newAppointment = await appointmentService.createAppointment(req.body);
         res.status(201).json(newAppointment);
     } catch (error) {
