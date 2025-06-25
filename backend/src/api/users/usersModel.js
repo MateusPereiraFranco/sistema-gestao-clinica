@@ -39,6 +39,17 @@ exports.findById = async (id) => {
     const { rows } = await db.query(query, [id]);
     return rows[0];
 };
+exports.findByProfile = async (profile) => {
+    const query = `
+        SELECT u.user_id, u.name, s.name as specialty_name
+        FROM users u
+        LEFT JOIN specialties s ON u.specialty_id = s.specialty_id
+        WHERE u.profile = $1 AND u.is_active = TRUE
+        ORDER BY u.name;
+    `;
+    const { rows } = await db.query(query, [profile]);
+    return rows;
+};
 exports.update = async (id, { name, email, profile, specialty_id, is_active }) => {
     const query = `
         UPDATE users

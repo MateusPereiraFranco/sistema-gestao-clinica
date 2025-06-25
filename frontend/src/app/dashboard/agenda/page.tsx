@@ -108,6 +108,7 @@ export default function AgendaPage() {
                     onCheckIn={handleCheckIn}
                     onMarkAsMissed={handleOpenMissedModal}
                     onScheduleClick={handleOpenNewAppointmentModal}
+                    refreshAgenda={fetchAppointments}
                 />
             </main>
             <NewAppointmentModal 

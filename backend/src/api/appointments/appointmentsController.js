@@ -38,3 +38,31 @@ exports.markAsMissed = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.startService = async (req, res, next) => {
+    try {
+        // Passamos o ID do agendamento (dos parâmetros da URL) e o ID do utilizador logado (do token) para o serviço.
+        const updatedAppointment = await appointmentService.startService(req.params.id, req.user.user_id);
+        res.status(200).json(updatedAppointment);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getServiceDetails = async (req, res, next) => {
+    try {
+        const details = await appointmentService.getServiceDetails(req.params.id);
+        res.status(200).json(details);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.completeService = async (req, res, next) => {
+    try {
+        const result = await appointmentService.completeService(req.params.id, req.body, req.user.user_id);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+};

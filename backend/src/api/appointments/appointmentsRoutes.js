@@ -9,8 +9,13 @@ router.route('/')
     .get(appointmentController.getAppointments)
     .post(appointmentController.createAppointment);
 
-// NOVAS ROTAS para gerir o ciclo de vida
+router.get('/:id/details-for-service', appointmentController.getServiceDetails);
+router.post('/:id/complete-service', appointmentController.completeService);
+
+// Rotas para gerir o ciclo de vida
 router.patch('/:id/check-in', appointmentController.checkIn);
 router.patch('/:id/mark-as-missed', appointmentController.markAsMissed);
+// NOVA ROTA: Rota para o profissional iniciar o atendimento.
+router.patch('/:id/start-service', appointmentController.startService);
 
 module.exports = router;

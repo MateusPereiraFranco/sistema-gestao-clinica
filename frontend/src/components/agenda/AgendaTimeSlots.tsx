@@ -4,6 +4,10 @@ import { Appointment, PatientVinculo} from "@/types";
 import { Clock, Plus, MessageSquare, CheckCircle, UserX, UserCheck, Stethoscope, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useAuthStore } from "@/stores/useAuthStore"; // Importar a store de autenticação
+import { useRouter } from "next/navigation"; // Importar o router para navegação
+import api from "@/services/api"; // Importar a nossa instância do axios
+import toast from "react-hot-toast";
 
 interface AgendaTimeSlotsProps {
     appointments: Appointment[];
@@ -11,6 +15,7 @@ interface AgendaTimeSlotsProps {
     onCheckIn: (appointmentId: string) => void;
     onMarkAsMissed: (appointment: Appointment) => void;
     onScheduleClick: (slot: string) => void;
+    refreshAgenda: () => void;
 }
 
 // Função auxiliar para obter a cor do vínculo
@@ -36,15 +41,29 @@ const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${info.style}`}>{info.text}</span>;
 };
 
-export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onScheduleClick }: any) {
+export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onScheduleClick, refreshAgenda }: AgendaTimeSlotsProps) {
+    const { user } = useAuthStore();
+    const router = useRouter();
     const [expandedObservationId, setExpandedObservationId] = useState<string | null>(null);
-    const timeSlots = Array.from({ length: 20 }, (_, i) => `${String(8 + Math.floor((i * 30) / 60)).padStart(2, '0')}:${String((i * 30) % 60).padStart(2, '0')}`);
+
+    const handleStartService = async (appointmentId: string) => {
+        const toastId = toast.loading("A iniciar atendimento...");
+        try {
+            await api.patch(`/appointments/${appointmentId}/start-service`);
+            toast.success("Atendimento iniciado.", { id: toastId });
+            refreshAgenda();
+            router.push(`/dashboard/atendimento/${appointmentId}`);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Não foi possível iniciar o atendimento.", { id: toastId });
+        }
+    };
 
     const handleToggleObservation = (appointmentId: string) => {
         setExpandedObservationId(prevId => (prevId === appointmentId ? null : appointmentId));
     };
     
-    
+    const timeSlots = Array.from({ length: 20 }, (_, i) => `${String(8 + Math.floor((i * 30) / 60)).padStart(2, '0')}:${String((i * 30) % 60).padStart(2, '0')}`);
+
     if (isLoading) {
         return <div className="text-center p-10 text-gray-500">A carregar agenda...</div>;
     }
@@ -62,7 +81,7 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <p className="font-bold text-gray-800 flex items-center gap-2"><Clock size={16} /> {slot}</p>
-                                    {/* <StatusBadge status={appointment.status} /> */}
+                                    <StatusBadge status={appointment.status} />
                                 </div>
                                 <div>
                                     <p className={`font-semibold truncate ${vinculoStyle.textColor}`}>{appointment.patient_name}</p>
@@ -80,7 +99,7 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                                         {isExpanded && <p className="mt-2 text-sm text-gray-700 bg-gray-100 p-2 rounded-md">{appointment.observations}</p>}
                                     </div>
                                 )}
-                                {/* Botões de Ação Reativos */}
+                                
                                 <div className="flex justify-end gap-2">
                                     {appointment.status === 'scheduled' && (
                                         <>
@@ -93,9 +112,14 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                                         </>
                                     )}
                                     {appointment.status === 'waiting' && (
-                                        <Link href={`/dashboard/atendimento/${appointment.appointment_id}`} className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-indigo-600 rounded-md p-2 hover:bg-indigo-700">
+                                        <button 
+                                            onClick={() => handleStartService(appointment.appointment_id)}
+                                            // A validação agora funciona corretamente.
+                                            disabled={user?.profile !== 'master' && user?.user_id !== appointment.professional_id}
+                                            className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-indigo-600 rounded-md p-2 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                        >
                                             <Stethoscope size={16} /> Atender
-                                        </Link>
+                                        </button>
                                     )}
                                 </div>
                             </div>

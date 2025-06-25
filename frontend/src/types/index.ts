@@ -28,6 +28,7 @@ export type AppointmentStatus =
 
 export interface Appointment {
     appointment_id: string;
+    professional_id: string;
     appointment_datetime: string;
     time: string;
     service_type: string;
@@ -38,11 +39,19 @@ export interface Appointment {
     vinculo: PatientVinculo;
 }
 
-
 export interface User {
     user_id: string;
     name: string;
     email: string;
     profile: 'master' | 'normal';
     specialty_name?: string;
+}
+
+export interface ServiceDetails {
+    patient_name: string;
+    patient_birth_date: string;
+    patient_cpf: string;
+    patient_mother_name: string;
+    appointment_id: string;
+    professional_id: string;
 }
