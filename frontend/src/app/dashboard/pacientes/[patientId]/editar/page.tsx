@@ -57,7 +57,9 @@ export default function EditarPacientePage() {
         <>
             <Header title="Editar Paciente" />
             <main className="flex-1 overflow-y-auto p-6">
-                {patient && <PatientForm patient={patient} />}
+                <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+                    {patient && <PatientForm patient={patient} />}
+                </div>
             </main>
         </>
     );

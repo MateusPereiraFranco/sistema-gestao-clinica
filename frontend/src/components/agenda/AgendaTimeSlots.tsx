@@ -1,12 +1,12 @@
 'use client';
 
-import { Appointment, PatientVinculo} from "@/types";
-import { Clock, Plus, MessageSquare, CheckCircle, UserX, UserCheck, Stethoscope, ChevronDown, ChevronUp } from "lucide-react";
+import { Appointment, PatientVinculo } from "@/types";
+import { Clock, Plus, MessageSquare, UserX, UserCheck, Stethoscope, ChevronDown, ChevronUp, Eye } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useAuthStore } from "@/stores/useAuthStore"; // Importar a store de autenticação
-import { useRouter } from "next/navigation"; // Importar o router para navegação
-import api from "@/services/api"; // Importar a nossa instância do axios
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useRouter } from "next/navigation";
+import api from "@/services/api";
 import toast from "react-hot-toast";
 
 interface AgendaTimeSlotsProps {
@@ -16,16 +16,6 @@ interface AgendaTimeSlotsProps {
     onMarkAsMissed: (appointment: Appointment) => void;
     onScheduleClick: (slot: string) => void;
     refreshAgenda: () => void;
-}
-
-// Função auxiliar para obter a cor do vínculo
-const getVinculoStyle = (vinculo: PatientVinculo | null) => {
-    switch (vinculo) {
-        case 'saude': return { borderColor: 'border-blue-500', textColor: 'text-blue-700' };
-        case 'educação': return { borderColor: 'border-green-500', textColor: 'text-green-700' };
-        case 'AMA': return { borderColor: 'border-pink-500', textColor: 'text-pink-700' };
-        default: return { borderColor: 'border-indigo-500', textColor: 'text-indigo-700' };
-    }
 }
 
 const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
@@ -40,6 +30,15 @@ const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
     const info = statusInfo[status] || statusInfo.scheduled;
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${info.style}`}>{info.text}</span>;
 };
+
+const getVinculoStyle = (vinculo: PatientVinculo | null) => {
+    switch (vinculo) {
+        case 'saude': return { borderColor: 'border-blue-500', textColor: 'text-blue-700' };
+        case 'educação': return { borderColor: 'border-green-500', textColor: 'text-green-700' };
+        case 'AMA': return { borderColor: 'border-pink-500', textColor: 'text-pink-700' };
+        default: return { borderColor: 'border-indigo-500', textColor: 'text-indigo-700' };
+    }
+}
 
 export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onScheduleClick, refreshAgenda }: AgendaTimeSlotsProps) {
     const { user } = useAuthStore();
@@ -111,15 +110,20 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                                             </button>
                                         </>
                                     )}
-                                    {appointment.status === 'waiting' && (
-                                        <button 
-                                            onClick={() => handleStartService(appointment.appointment_id)}
-                                            // A validação agora funciona corretamente.
-                                            disabled={user?.profile !== 'master' && user?.user_id !== appointment.professional_id}
-                                            className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-indigo-600 rounded-md p-2 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                        >
-                                            <Stethoscope size={16} /> Atender
-                                        </button>
+                                    {(appointment.status === 'waiting' || appointment.status === 'in_progress') && (
+                                    <button 
+                                        onClick={() => handleStartService(appointment.appointment_id)}
+                                        disabled={user?.profile !== 'master' && user?.user_id !== appointment.professional_id}
+                                        className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-indigo-600 rounded-md p-2 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        <Stethoscope size={16} />
+                                        {appointment.status === 'in_progress' ? 'Continuar Atend.' : 'Atender'}
+                                    </button>
+                                    )}
+                                    {appointment.status === 'completed' && (
+                                         <Link href={`/dashboard/atendimento/${appointment.appointment_id}/visualizar`} className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 font-semibold p-2 rounded hover:bg-gray-100">
+                                            <Eye size={14} /> Ver Ficha
+                                        </Link>
                                     )}
                                 </div>
                             </div>

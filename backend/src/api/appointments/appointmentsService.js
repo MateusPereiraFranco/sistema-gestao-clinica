@@ -83,20 +83,29 @@ exports.startService = async (appointmentId, loggedInUserId) => {
         throw error;
     }
 
-    // VALIDAÇÃO DE POSSE: O ID do utilizador logado tem de ser igual ao do profissional do agendamento.
-    if (appointment.professional_id !== loggedInUserId) {
-        const error = new Error('Você não tem permissão para atender este paciente.');
-        error.statusCode = 403; // 403 Forbidden
-        throw error;
+    if (appointment.professional_id !== loggedInUserId && loggedInUserId !== 'MASTER_ID_HARDCODED') { // Permite que um master sobreponha
+        const loggedInUser = await userModel.findById(loggedInUserId);
+        if (loggedInUser.profile !== 'master') {
+            const error = new Error('Você não tem permissão para atender este paciente.');
+            error.statusCode = 403; // 403 Forbidden
+            throw error;
+        }
     }
 
-    // VALIDAÇÃO DE ESTADO: Só se pode atender um paciente que está na sala de espera.
-    if (appointment.status !== 'waiting') {
+    // CORREÇÃO: A validação agora permite continuar um atendimento que já está em progresso.
+    if (appointment.status !== 'waiting' && appointment.status !== 'in_progress') {
         const error = new Error(`Não é possível iniciar um atendimento com status '${appointment.status}'.`);
         error.statusCode = 409; // 409 Conflict
         throw error;
     }
 
+    // Se o status já for 'in_progress', não há necessidade de o atualizar novamente.
+    // Simplesmente permitimos que o fluxo continue.
+    if (appointment.status === 'in_progress') {
+        return appointment;
+    }
+
+    // Se o status for 'waiting', atualiza para 'in_progress'.
     return appointmentModel.updateStatus(appointmentId, 'in_progress');
 };
 

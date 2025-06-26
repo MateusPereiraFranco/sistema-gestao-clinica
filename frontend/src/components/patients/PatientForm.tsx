@@ -1,7 +1,7 @@
 'use client';
 
 import api from "@/services/api";
-import { maskCPF, maskPhone, maskCEP } from "@/utils/masks";
+import { maskCPF, maskPhone, maskCEP, maskCNS } from "@/utils/masks";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
@@ -12,7 +12,7 @@ interface PatientFormProps {
     patient?: Patient;
 }
 
-export default function PatientForm({ patient }: PatientFormProps) {
+export default function PatientForm({ patient }: { patient?: Patient }) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [isCepLoading, setIsCepLoading] = useState(false);
@@ -32,6 +32,8 @@ export default function PatientForm({ patient }: PatientFormProps) {
         state: patient?.state || '',
         observations: patient?.observations || '',
         vinculo: patient?.vinculo || 'nenhum',
+        father_name: patient?.father_name || '',
+        cns: patient?.cns || '',
     });
     
     const [isWithoutNumber, setIsWithoutNumber] = useState(patient?.number === 'S/N');
@@ -40,11 +42,10 @@ export default function PatientForm({ patient }: PatientFormProps) {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         let maskedValue = value;
-
         if (name === 'cpf') maskedValue = maskCPF(value);
+        if (name === 'cns') maskedValue = maskCNS(value); // Aplicar máscara do CNS
         if (name === 'cell_phone_1' || name === 'cell_phone_2') maskedValue = maskPhone(value);
         if (name === 'cep') maskedValue = maskCEP(value);
-        
         setFormData(prev => ({ ...prev, [name]: maskedValue }));
     };
 
@@ -93,9 +94,8 @@ export default function PatientForm({ patient }: PatientFormProps) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-12">
-            {/* Secção de Informações Pessoais */}
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">Informações Pessoais</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Identificação</h2>
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                     <div className="sm:col-span-3">
                         <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Nome Completo</label>
@@ -105,13 +105,21 @@ export default function PatientForm({ patient }: PatientFormProps) {
                         <label htmlFor="mother_name" className="block text-sm font-medium leading-6 text-gray-900">Nome da Mãe</label>
                         <input type="text" name="mother_name" id="mother_name" required value={formData.mother_name} onChange={handleChange} className="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600" />
                     </div>
-                    <div className="sm:col-span-2">
+                    <div className="sm:col-span-3">
+                        <label htmlFor="father_name" className="block text-sm font-medium leading-6 text-gray-900">Nome do Pai</label>
+                        <input type="text" name="father_name" id="father_name" value={formData.father_name} onChange={handleChange} className="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600" />
+                    </div>
+                    <div className="sm:col-span-3">
                         <label htmlFor="birth_date" className="block text-sm font-medium leading-6 text-gray-900">Data de Nascimento</label>
                         <input type="date" name="birth_date" id="birth_date" required value={formData.birth_date} onChange={handleChange} className="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600" />
                     </div>
                     <div className="sm:col-span-2">
                         <label htmlFor="cpf" className="block text-sm font-medium leading-6 text-gray-900">CPF</label>
                         <input type="text" name="cpf" id="cpf" value={formData.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} className="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600" />
+                    </div>
+                    <div className="sm:col-span-2">
+                        <label htmlFor="cns" className="block text-sm font-medium leading-6 text-gray-900">CNS (Cartão SUS)</label>
+                        <input type="text" name="cns" id="cns" value={formData.cns} onChange={handleChange} placeholder="000 0000 0000 0000" maxLength={18} className="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600" />
                     </div>
                      <div className="sm:col-span-2">
                         <label htmlFor="vinculo" className="block text-sm font-medium leading-6 text-gray-900">Vínculo</label>

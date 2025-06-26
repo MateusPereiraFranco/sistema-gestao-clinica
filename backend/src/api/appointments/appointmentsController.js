@@ -49,6 +49,15 @@ exports.startService = async (req, res, next) => {
     }
 };
 
+exports.getCompletedServiceForView = async (req, res, next) => {
+    try {
+        const details = await appointmentService.getCompletedServiceDetails(req.params.id);
+        res.status(200).json(details);
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.getServiceDetails = async (req, res, next) => {
     try {
         const details = await appointmentService.getServiceDetails(req.params.id);

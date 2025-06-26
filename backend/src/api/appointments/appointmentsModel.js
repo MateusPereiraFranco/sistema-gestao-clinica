@@ -5,7 +5,7 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
     const query = `
         SELECT
             apt.appointment_id,
-            apt.professional_id, -- <<< CAMPO ADICIONADO À RESPOSTA
+            apt.professional_id,
             apt.appointment_datetime,
             to_char(apt.appointment_datetime, 'HH24:MI') as time,
             apt.service_type,
@@ -22,7 +22,6 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
     const { rows } = await db.query(query, [professionalId, date]);
     return rows;
 };
-
 
 exports.findByProfessionalAndDateTime = async (professionalId, dateTime) => {
     const query = 'SELECT appointment_id FROM appointments WHERE professional_id = $1 AND appointment_datetime = $2';
@@ -55,15 +54,60 @@ exports.findDetailsForService = async (appointmentId) => {
             p.name as patient_name,
             to_char(p.birth_date, 'DD/MM/YYYY') as patient_birth_date,
             p.cpf as patient_cpf,
+            p.cns as patient_cns, -- Adicionado
             p.mother_name as patient_mother_name,
             apt.appointment_id,
-            apt.professional_id
+            apt.professional_id,
+            apt.appointment_datetime -- Adicionado
         FROM appointments apt
         JOIN patients p ON apt.patient_id = p.patient_id
         WHERE apt.appointment_id = $1;
     `;
     const { rows } = await db.query(query, [appointmentId]);
     return rows[0];
+};
+
+exports.findCompletedServiceDetails = async (appointmentId) => {
+    const query = `
+        SELECT
+            p.name as patient_name,
+            to_char(p.birth_date, 'DD/MM/YYYY') as patient_birth_date,
+            p.cpf as patient_cpf,
+            p.cns as patient_cns,
+            p.mother_name as patient_mother_name,
+            apt.appointment_id,
+            apt.observations,
+            apt.discharge_given,
+            apt.follow_up_days,
+            apt.appointment_datetime,
+            u.name as professional_name,
+            s.name as specialty_name
+        FROM appointments apt
+        JOIN patients p ON apt.patient_id = p.patient_id
+        JOIN users u ON apt.professional_id = u.user_id
+        LEFT JOIN specialties s ON u.specialty_id = s.specialty_id
+        WHERE apt.appointment_id = $1 AND apt.status = 'completed';
+    `;
+    const appointmentResult = await db.query(query, [appointmentId]);
+    if (appointmentResult.rows.length === 0) return null;
+
+    const evolutionQuery = 'SELECT evolution FROM medical_records WHERE appointment_id = $1 ORDER BY record_datetime DESC LIMIT 1;';
+    const referralsQuery = `
+        SELECT u.name, s.name as specialty_name 
+        FROM referrals r 
+        JOIN users u ON r.referred_to_professional_id = u.user_id 
+        LEFT JOIN specialties s ON u.specialty_id = s.specialty_id
+        WHERE r.from_appointment_id = $1;
+    `;
+
+    const evolutionResult = await db.query(evolutionQuery, [appointmentId]);
+    const referralsResult = await db.query(referralsQuery, [appointmentId]);
+
+    return {
+        ...appointmentResult.rows[0],
+        evolution: evolutionResult.rows[0]?.evolution || 'Nenhuma evolução registada.',
+        referrals: referralsResult.rows,
+    };
 };
 
 exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations }) => {

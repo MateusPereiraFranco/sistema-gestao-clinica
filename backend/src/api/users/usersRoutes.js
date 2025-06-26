@@ -4,16 +4,19 @@ const { protect, restrictTo } = require('../../middlewares/authMiddleware');
 
 const router = Router();
 
-// Todas as rotas de gestão de utilizadores são protegidas e restritas a 'master'
-router.use(protect, restrictTo('master'));
+// CORREÇÃO: A regra geral "router.use(protect, restrictTo('master'))" foi removida.
+// Agora, aplicamos a segurança a cada rota individualmente.
 
 router.route('/')
-    .post(userController.createUser)
-    .get(userController.getAllUsers);
+    // Qualquer utilizador autenticado pode listar os profissionais para a agenda.
+    .get(protect, userController.getAllUsers)
+    // Apenas um master pode criar um novo utilizador.
+    .post(protect, restrictTo('master'), userController.createUser);
 
 router.route('/:id')
-    .get(userController.getUserById)
-    .put(userController.updateUser)
-    .delete(userController.deleteUser);
+    // Apenas um master pode ver, atualizar ou apagar os detalhes de um utilizador.
+    .get(protect, restrictTo('master'), userController.getUserById)
+    .put(protect, restrictTo('master'), userController.updateUser)
+    .delete(protect, restrictTo('master'), userController.deleteUser);
 
 module.exports = router;

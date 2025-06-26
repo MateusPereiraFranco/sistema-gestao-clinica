@@ -16,11 +16,11 @@ export default function AgendaPage() {
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isFetchingProfessionals, setIsFetchingProfessionals] = useState(true);
 
     const [selectedProfessional, setSelectedProfessional] = useState<string>('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     
-    // Controlo dos modais
     const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false);
     const [isMissedModalOpen, setIsMissedModalOpen] = useState(false);
     const [appointmentForModal, setAppointmentForModal] = useState<Appointment | null>(null);
@@ -45,24 +45,38 @@ export default function AgendaPage() {
 
     useEffect(() => {
         const fetchProfessionals = async () => {
+            if (!user) return;
+            setIsFetchingProfessionals(true);
             try {
                 const response = await api.get('/users');
-                setProfessionals(response.data);
-                if (user?.profile === 'normal' && response.data.some((p: User) => p.user_id === user.user_id)) {
-                    setSelectedProfessional(user.user_id);
-                } else if (response.data.length > 0) {
-                    setSelectedProfessional(response.data[0].user_id);
+                const professionalList: User[] = response.data;
+                setProfessionals(professionalList);
+                
+                let defaultProfessionalId = '';
+                if (user.profile === 'normal' && professionalList.some(p => p.user_id === user.user_id)) {
+                    defaultProfessionalId = user.user_id;
+                } else if (professionalList.length > 0) {
+                    defaultProfessionalId = professionalList[0].user_id;
                 }
+                
+                if (defaultProfessionalId && !selectedProfessional) {
+                    setSelectedProfessional(defaultProfessionalId);
+                }
+
             } catch (error) {
                 console.error("Erro ao buscar profissionais:", error);
+            } finally {
+                setIsFetchingProfessionals(false);
             }
         };
         fetchProfessionals();
-    }, [user]);
+    }, [user, selectedProfessional]);
 
     useEffect(() => {
-        fetchAppointments();
-    }, [fetchAppointments]);
+        if (!isFetchingProfessionals && selectedProfessional) {
+            fetchAppointments();
+        }
+    }, [fetchAppointments, isFetchingProfessionals, selectedProfessional]);
 
     const handleCheckIn = async (appointmentId: string) => {
         const toastId = toast.loading("A fazer check-in...");
@@ -82,7 +96,6 @@ export default function AgendaPage() {
 
     const handleCloseMissedModal = () => {
         setIsMissedModalOpen(false);
-        // Pequeno atraso para a animação de saída do modal
         setTimeout(() => setAppointmentForModal(null), 300);
     }
 
@@ -95,16 +108,22 @@ export default function AgendaPage() {
         <>
             <Header title="Agenda do Dia" />
             <main className="flex-1 overflow-y-auto p-6">
-                <AgendaFilters 
-                    professionals={professionals}
-                    selectedProfessional={selectedProfessional}
-                    setSelectedProfessional={setSelectedProfessional}
-                    selectedDate={selectedDate}
-                    setSelectedDate={setSelectedDate}
-                />
+                {!isFetchingProfessionals && professionals.length > 0 ? (
+                    <AgendaFilters 
+                        professionals={professionals}
+                        selectedProfessional={selectedProfessional}
+                        setSelectedProfessional={setSelectedProfessional}
+                        selectedDate={selectedDate}
+                        setSelectedDate={setSelectedDate}
+                    />
+                ) : (
+                    <div className="p-4 bg-white rounded-lg shadow-sm mb-6 text-center text-gray-500">
+                        A carregar filtros...
+                    </div>
+                )}
                 <AgendaTimeSlots 
                     appointments={appointments}
-                    isLoading={isLoading}
+                    isLoading={isLoading || isFetchingProfessionals}
                     onCheckIn={handleCheckIn}
                     onMarkAsMissed={handleOpenMissedModal}
                     onScheduleClick={handleOpenNewAppointmentModal}

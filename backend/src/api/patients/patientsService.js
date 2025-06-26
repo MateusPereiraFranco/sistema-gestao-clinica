@@ -1,4 +1,5 @@
 const patientModel = require('./patientsModel');
+const { isValidCPF, isValidCNS } = require('../../utils/validators');
 
 exports.getAllPatients = (filters) => {
     return patientModel.findWithFilters(filters);
@@ -31,12 +32,18 @@ exports.createPatient = async (patientData, userId) => {
     }
 
     if (patientData.cpf) {
+        if (!isValidCPF(patientData.cpf)) {
+            throw new Error('O CPF fornecido é inválido.');
+        }
         const existingPatient = await patientModel.findByCpf(patientData.cpf);
         if (existingPatient) {
             const error = new Error('O CPF fornecido já está registado noutro paciente.');
             error.statusCode = 409;
             throw error;
         }
+    }
+    if (patientData.cns && !isValidCNS(patientData.cns)) {
+        throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
     }
 
     const fullPatientData = { ...patientData, registered_by: userId };
@@ -53,12 +60,18 @@ exports.updatePatient = async (id, patientData) => {
     }
 
     if (patientData.cpf) {
+        if (!isValidCPF(patientData.cpf)) {
+            throw new Error('O CPF fornecido é inválido.');
+        }
         const existingPatient = await patientModel.findByCpf(patientData.cpf);
         if (existingPatient && existingPatient.patient_id !== id) {
             const error = new Error('O CPF fornecido já está registado noutro paciente.');
             error.statusCode = 409;
             throw error;
         }
+    }
+    if (patientData.cns && !isValidCNS(patientData.cns)) {
+        throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
     }
     return patientModel.update(id, patientData);
 };
