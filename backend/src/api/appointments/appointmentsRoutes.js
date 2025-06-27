@@ -12,6 +12,7 @@ router.route('/')
 router.get('/:id/details-for-service', appointmentController.getServiceDetails);
 router.post('/:id/complete-service', appointmentController.completeService);
 router.get('/:id/view', appointmentController.getCompletedServiceForView);
+router.post('/on-demand', appointmentController.createOnDemandService);
 
 // Rotas para gerir o ciclo de vida
 router.patch('/:id/check-in', appointmentController.checkIn);

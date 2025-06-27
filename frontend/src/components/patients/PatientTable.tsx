@@ -1,13 +1,20 @@
+'use client';
+
 import { Patient } from "@/types";
-import { FileText, Pencil, Trash2 } from "lucide-react";
+import { FileText, Pencil, Trash2, Stethoscope } from "lucide-react";
 import Link from "next/link";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface PatientTableProps {
     patients: Patient[];
     isLoading: boolean;
+    onLaunchService: (patient: Patient) => void;
+    onDeletePatient: (patientId: string) => void; // <-- Propriedade adicionada
 }
 
-export default function PatientTable({ patients, isLoading }: PatientTableProps) {
+export default function PatientTable({ patients, isLoading, onLaunchService, onDeletePatient }: PatientTableProps) {
+    const { user } = useAuthStore();
+
     if (isLoading) {
         return <div className="text-center p-8">A carregar pacientes...</div>;
     }
@@ -37,11 +44,18 @@ export default function PatientTable({ patients, isLoading }: PatientTableProps)
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.mother_name}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.birth_date_formatted}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button className="text-indigo-600 hover:text-indigo-900" title="Ver Prontuário"><FileText className="w-5 h-5"/></button>
-                                <Link href={`/dashboard/pacientes/${patient.patient_id}/editar`} className="inline-block text-blue-600 hover:text-blue-900" title="Editar Paciente">
+                                <button onClick={() => onLaunchService(patient)} className="inline-flex items-center text-green-600 hover:text-green-900" title="Lançar Atendimento">
+                                    <Stethoscope className="w-5 h-5"/>
+                                </button>
+                                <Link href={`/dashboard/pacientes/${patient.patient_id}/editar`} className="inline-flex items-center text-blue-600 hover:text-blue-900" title="Editar Paciente">
                                     <Pencil className="w-5 h-5"/>
                                 </Link>
-                                <button className="text-red-600 hover:text-red-900" title="Apagar Paciente"><Trash2 className="w-5 h-5"/></button>
+                                {user?.profile === 'master' && (
+                                    // O onClick agora chama a função recebida pela prop
+                                    <button onClick={() => onDeletePatient(patient.patient_id)} className="inline-flex items-center text-red-600 hover:text-red-900" title="Apagar Paciente">
+                                        <Trash2 className="w-5 h-5"/>
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}

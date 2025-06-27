@@ -33,6 +33,7 @@ export interface Appointment {
     patient_name: string;
     observations: string | null;
     vinculo: PatientVinculo; 
+    professional_name?: string;
 }
 
 export interface User {

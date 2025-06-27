@@ -1,6 +1,5 @@
 const db = require('../../config/db');
 
-
 exports.findByProfessionalAndDate = async (professionalId, date) => {
     const query = `
         SELECT
@@ -20,6 +19,44 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
         ORDER BY apt.appointment_datetime ASC;
     `;
     const { rows } = await db.query(query, [professionalId, date]);
+    return rows;
+};
+
+exports.findAppointments = async (filters) => {
+    const { professionalId, date, statusArray } = filters;
+
+    let query = `
+        SELECT
+            apt.appointment_id, apt.professional_id, apt.appointment_datetime,
+            to_char(apt.appointment_datetime, 'HH24:MI') as time,
+            apt.service_type, apt.status, apt.observations,
+            p.patient_id, p.name as patient_name, p.vinculo,
+            prof.name as professional_name -- Adiciona o nome do profissional
+        FROM appointments apt
+        JOIN patients p ON apt.patient_id = p.patient_id
+        JOIN users prof ON apt.professional_id = prof.user_id
+        WHERE 1=1 
+    `;
+    const params = [];
+    let paramIndex = 1;
+
+    if (date) {
+        query += ` AND apt.appointment_datetime::date = $${paramIndex++}::date`;
+        params.push(date);
+    }
+    // O filtro por profissional só é adicionado se um ID for fornecido.
+    if (professionalId) {
+        query += ` AND apt.professional_id = $${paramIndex++}`;
+        params.push(professionalId);
+    }
+    if (statusArray && statusArray.length > 0) {
+        query += ` AND apt.status = ANY($${paramIndex++}::appointment_status[])`;
+        params.push(statusArray);
+    }
+
+    query += ' ORDER BY apt.appointment_datetime ASC;';
+
+    const { rows } = await db.query(query, params);
     return rows;
 };
 
@@ -110,13 +147,9 @@ exports.findCompletedServiceDetails = async (appointmentId) => {
     };
 };
 
-exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations }) => {
-    const query = `
-        INSERT INTO appointments (patient_id, professional_id, unit_id, appointment_datetime, service_type, status, observations)
-        VALUES ($1, $2, $3, $4, $5, 'scheduled', $6)
-        RETURNING *;
-    `;
-    const params = [patient_id, professional_id, unit_id, appointment_datetime, service_type, observations];
+exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations, status }) => {
+    const query = `INSERT INTO appointments (patient_id, professional_id, unit_id, appointment_datetime, service_type, status, observations) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`;
+    const params = [patient_id, professional_id, unit_id, appointment_datetime, service_type, status || 'scheduled', observations];
     const { rows } = await db.query(query, params);
     return rows[0];
 };

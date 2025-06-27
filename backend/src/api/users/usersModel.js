@@ -14,6 +14,18 @@ exports.create = async ({ unit_id, name, email, password, profile, specialty_id 
     return rows[0];
 };
 
+exports.findAllActive = async () => {
+    const query = `
+        SELECT u.user_id, u.name, u.profile, s.name as specialty_name
+        FROM users u
+        LEFT JOIN specialties s ON u.specialty_id = s.specialty_id
+        WHERE u.is_active = TRUE
+        ORDER BY u.name;
+    `;
+    const { rows } = await db.query(query);
+    return rows;
+};
+
 // Modificado para incluir o nome da especialidade através de um JOIN
 exports.findAll = async () => {
     const query = `

@@ -2,8 +2,9 @@ const appointmentService = require('./appointmentsService');
 
 exports.getAppointments = async (req, res, next) => {
     try {
-        const { professionalId, date } = req.query;
-        const appointments = await appointmentService.getAppointmentsByProfessionalAndDate(professionalId, date);
+        const { professionalId, date, status } = req.query;
+        const filters = { professionalId, date, statusArray: Array.isArray(status) ? status : (status ? [status] : []) };
+        const appointments = await appointmentService.getAppointments(filters);
         res.status(200).json(appointments);
     } catch (error) {
         next(error);
@@ -71,6 +72,15 @@ exports.completeService = async (req, res, next) => {
     try {
         const result = await appointmentService.completeService(req.params.id, req.body, req.user.user_id);
         res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.createOnDemandService = async (req, res, next) => {
+    try {
+        const newAppointment = await appointmentService.createOnDemandService(req.body);
+        res.status(201).json(newAppointment);
     } catch (error) {
         next(error);
     }

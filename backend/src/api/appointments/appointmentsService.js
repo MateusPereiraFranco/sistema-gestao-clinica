@@ -11,6 +11,10 @@ exports.getAppointmentsByProfessionalAndDate = async (professionalId, date) => {
     return appointmentModel.findByProfessionalAndDate(professionalId, date);
 };
 
+exports.getAppointments = async (filters) => {
+    return appointmentModel.findAppointments(filters);
+};
+
 exports.createAppointment = async (appointmentData) => {
     const { professional_id, appointment_datetime, patient_id, observations } = appointmentData;
 
@@ -141,4 +145,29 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
     );
 
     return { message: 'Atendimento finalizado com sucesso.' };
+};
+
+exports.createOnDemandService = async (data) => {
+    const { patient_id, professional_id } = data;
+    if (!patient_id || !professional_id) {
+        throw new Error("ID do paciente e do profissional são obrigatórios.");
+    }
+
+    const professional = await userModel.findById(professional_id);
+    if (!professional) throw new Error('Profissional não encontrado.');
+
+    const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [professional.specialty_id]);
+    const specialtyName = specialtyResponse.rows[0]?.name || 'Atendimento Geral';
+
+    const appointmentData = {
+        patient_id,
+        professional_id,
+        unit_id: professional.unit_id,
+        appointment_datetime: new Date(),
+        service_type: specialtyName,
+        observations: 'Atendimento avulso (gerado na receção)',
+        status: 'waiting' // O paciente entra diretamente na fila de espera.
+    };
+
+    return appointmentModel.create(appointmentData);
 };
