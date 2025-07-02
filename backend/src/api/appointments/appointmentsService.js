@@ -38,7 +38,12 @@ exports.createAppointment = async (appointmentData) => {
         throw error;
     }
 
-    // Busca os dados da especialidade do profissional para usar no agendamento.
+    if (!professional.unit_id) {
+        const error = new Error('O profissional selecionado não está associado a nenhuma unidade.');
+        error.statusCode = 400;
+        throw error;
+    }
+
     const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [professional.specialty_id]);
     const specialtyName = specialtyResponse.rows[0]?.name || 'Atendimento Geral';
 
@@ -49,9 +54,39 @@ exports.createAppointment = async (appointmentData) => {
         appointment_datetime: appointment_datetime,
         service_type: specialtyName,
         observations: observations || null,
+        status: 'scheduled'
     };
 
     return appointmentModel.create(fullAppointmentData);
+};
+
+exports.addToWaitingList = async (data) => {
+    const { patient_id, professional_id, request_date } = data;
+    if (!patient_id || !professional_id || !request_date) {
+        throw new Error("Dados insuficientes para adicionar à lista de espera.");
+    }
+
+    const professional = await userModel.findById(professional_id);
+    if (!professional) throw new Error('Profissional não encontrado.');
+
+    const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [professional.specialty_id]);
+    const specialtyName = specialtyResponse.rows[0]?.name || 'Atendimento Geral';
+
+    const now = new Date();
+    const timeString = now.toTimeString().split(' ')[0];
+    const appointment_datetime = `${request_date}T${timeString}`;
+
+    const appointmentData = {
+        patient_id,
+        professional_id,
+        unit_id: professional.unit_id,
+        appointment_datetime,
+        service_type: specialtyName,
+        observations: 'Adicionado à lista de espera.',
+        status: 'on_waiting_list' // O novo status!
+    };
+
+    return appointmentModel.create(appointmentData);
 };
 
 exports.checkIn = async (appointmentId) => {
@@ -61,7 +96,7 @@ exports.checkIn = async (appointmentId) => {
         error.statusCode = 404;
         throw error;
     }
-    if (appointment.status !== 'scheduled') {
+    if (appointment.status !== 'scheduled' && appointment.status !== 'on_waiting_list') {
         throw new Error(`Não é possível fazer check-in de um agendamento com status '${appointment.status}'.`);
     }
     return appointmentModel.updateStatus(appointmentId, 'waiting');
@@ -150,11 +185,23 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
 exports.createOnDemandService = async (data) => {
     const { patient_id, professional_id } = data;
     if (!patient_id || !professional_id) {
-        throw new Error("ID do paciente e do profissional são obrigatórios.");
+        const error = new Error("ID do paciente e do profissional são obrigatórios.");
+        error.statusCode = 400;
+        throw error;
     }
 
     const professional = await userModel.findById(professional_id);
-    if (!professional) throw new Error('Profissional não encontrado.');
+    if (!professional) {
+        const error = new Error('Profissional não encontrado.');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (!professional.unit_id) {
+        const error = new Error('O profissional selecionado não está associado a nenhuma unidade.');
+        error.statusCode = 400;
+        throw error;
+    }
 
     const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [professional.specialty_id]);
     const specialtyName = specialtyResponse.rows[0]?.name || 'Atendimento Geral';
@@ -163,11 +210,22 @@ exports.createOnDemandService = async (data) => {
         patient_id,
         professional_id,
         unit_id: professional.unit_id,
-        appointment_datetime: new Date(),
+        // CORREÇÃO: Não geramos mais a data aqui. Deixamos a base de dados fazer isso.
+        appointment_datetime: null,
         service_type: specialtyName,
         observations: 'Atendimento avulso (gerado na receção)',
-        status: 'waiting' // O paciente entra diretamente na fila de espera.
+        status: 'waiting'
     };
 
     return appointmentModel.create(appointmentData);
+};
+
+exports.getCompletedServiceDetails = async (appointmentId) => {
+    const details = await appointmentModel.findCompletedServiceDetails(appointmentId);
+    if (!details) {
+        const error = new Error('Detalhes do atendimento concluído não encontrados.');
+        error.statusCode = 404;
+        throw error;
+    }
+    return details;
 };

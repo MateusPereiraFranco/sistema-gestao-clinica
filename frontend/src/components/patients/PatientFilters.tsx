@@ -16,7 +16,6 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
     const [filters, setFilters] = useState({
         name: '',
         mother_name: '',
-        father_name: '',
         cpf: '',
         cns: ''
     });
@@ -34,7 +33,6 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
         setFilters(prev => ({ ...prev, [name]: maskedValue }));
     };
 
-    // Efeito para a busca "ao vivo" apenas pelo nome
     useEffect(() => {
         const fetchSuggestions = async () => {
             if (debouncedName.length > 2) {
@@ -52,12 +50,11 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
         };
 
         // Não executa a busca ao vivo se outros campos estiverem preenchidos
-        if (!filters.mother_name && !filters.father_name && !filters.cpf && !filters.cns) {
+        if (!filters.mother_name && !filters.cpf && !filters.cns) {
             fetchSuggestions();
         }
     }, [debouncedName, filters]);
 
-    // Lida com a busca principal ao clicar no botão
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -68,12 +65,10 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
         onSearch(activeFilters);
     };
 
-    // Lida com o clique numa sugestão
     const handleSuggestionClick = (patient: Patient) => {
         setFilters({
             name: patient.name,
             mother_name: patient.mother_name || '',
-            father_name: patient.father_name || '',
             cpf: patient.cpf || '',
             cns: patient.cns || ''
         });
@@ -107,8 +102,8 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"/>
                 </div>
                 <div>
-                    <label htmlFor="father_name" className="block text-sm font-medium text-gray-700">Nome do Pai</label>
-                    <input type="text" name="father_name" id="father_name" value={filters.father_name} onChange={handleFilterChange} 
+                    <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">CPF</label>
+                    <input type="text" name="cpf" id="cpf" value={filters.cpf} onChange={handleFilterChange} 
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"/>
                 </div>
                 <div>

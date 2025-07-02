@@ -1,7 +1,7 @@
 'use client';
 
 import { Appointment, PatientVinculo } from "@/types";
-import { Stethoscope, Clock, UserCheck } from "lucide-react";
+import { Stethoscope, Clock, UserCheck, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/useAuthStore";
 import toast from "react-hot-toast";
@@ -42,7 +42,7 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
             {queue.map(item => {
                 const vinculoStyle = getVinculoStyle(item.vinculo);
                 const canAttend = user?.profile === 'master' || user?.user_id === item.professional_id;
-                
+                console.log('Item:', item);
                 return (
                     <div key={item.appointment_id} className={`p-4 bg-white rounded-lg shadow-sm flex items-center justify-between border-l-4 ${vinculoStyle.borderColor}`}>
                         <div className="flex items-center gap-4">
@@ -57,21 +57,30 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                 </div>
                             </div>
                         </div>
-                        <Link 
-                            href={`/dashboard/atendimento/${item.appointment_id}`}
-                            className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors
-                                ${canAttend ? 'hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed'}`
-                            }
-                            onClick={(e) => {
-                                if (!canAttend) {
-                                    e.preventDefault();
-                                    toast.error("Apenas o profissional responsável pode atender.");
+                        {item.status === 'completed' ? (
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm text-green-600 font-semibold">Atendido</span>
+                                <Link href={`/dashboard/atendimento/${item.appointment_id}/visualizar`} className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 font-semibold p-2 rounded hover:bg-gray-100" title="Ver Ficha">
+                                    <Eye size={14} />
+                                </Link>
+                            </div>
+                        ) : (
+                            <Link 
+                                href={`/dashboard/atendimento/${item.appointment_id}`}
+                                className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors
+                                    ${canAttend ? 'hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed'}`
                                 }
-                            }}
-                        >
-                            <Stethoscope size={18} />
-                            {item.status === 'in_progress' ? 'Continuar' : 'Atender'}
-                        </Link>
+                                onClick={(e) => {
+                                    if (!canAttend) {
+                                        e.preventDefault();
+                                        toast.error("Apenas o profissional responsável pode atender.");
+                                    }
+                                }}
+                            >
+                                <Stethoscope size={18} />
+                                {item.status === 'in_progress' ? 'Continuar' : 'Atender'}
+                            </Link>
+                        )}
                     </div>
                 )
             })}

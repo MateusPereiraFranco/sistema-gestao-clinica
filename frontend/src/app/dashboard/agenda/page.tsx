@@ -10,80 +10,73 @@ import AgendaTimeSlots from "@/components/agenda/AgendaTimeSlots";
 import NewAppointmentModal from "@/components/agenda/NewAppointmentModal";
 import MissedAppointmentModal from "@/components/agenda/MissedAppointmentModal";
 import toast from "react-hot-toast";
+import { useFilterStore } from "@/stores/useFilterStore";
 
 export default function AgendaPage() {
     const { user } = useAuthStore();
+    const { agendaProfessional, setAgendaProfessional, agendaDate } = useFilterStore();
+    
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFetchingProfessionals, setIsFetchingProfessionals] = useState(true);
 
-    const [selectedProfessional, setSelectedProfessional] = useState<string>('');
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-    
     const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false);
     const [isMissedModalOpen, setIsMissedModalOpen] = useState(false);
     const [appointmentForModal, setAppointmentForModal] = useState<Appointment | null>(null);
     const [selectedSlot, setSelectedSlot] = useState('');
 
-    const fetchAppointments = useCallback(async () => {
-        if (!selectedProfessional || !selectedDate) return;
+    const fetchAgendaData = useCallback(async () => {
+        if (isFetchingProfessionals || !agendaProfessional) return;
         setIsLoading(true);
         try {
-            const response = await api.get('/appointments', {
-                params: { professionalId: selectedProfessional, date: selectedDate }
+            const response = await api.get('/appointments', { 
+                params: { professionalId: agendaProfessional, date: agendaDate } 
             });
             setAppointments(response.data);
         } catch (error) {
-            console.error("Erro ao buscar agendamentos:", error);
-            setAppointments([]);
             toast.error("Não foi possível carregar a agenda.");
         } finally {
             setIsLoading(false);
         }
-    }, [selectedProfessional, selectedDate]);
+    }, [agendaProfessional, agendaDate, isFetchingProfessionals]);
 
     useEffect(() => {
-        const fetchProfessionals = async () => {
+        const fetchProfessionalsAndSetDefaults = async () => {
             if (!user) return;
             setIsFetchingProfessionals(true);
             try {
                 const response = await api.get('/users');
-                const professionalList: User[] = response.data;
+                const professionalList: User[] = response.data.filter((u: User) => u.profile === 'normal');
                 setProfessionals(professionalList);
                 
-                let defaultProfessionalId = '';
-                if (user.profile === 'normal' && professionalList.some(p => p.user_id === user.user_id)) {
-                    defaultProfessionalId = user.user_id;
-                } else if (professionalList.length > 0) {
-                    defaultProfessionalId = professionalList[0].user_id;
+                const currentProfessional = useFilterStore.getState().agendaProfessional;
+                if (!currentProfessional || !professionalList.some(p => p.user_id === currentProfessional)) {
+                    if (user.profile === 'normal' && professionalList.some(p => p.user_id === user.user_id)) {
+                        setAgendaProfessional(user.user_id);
+                    } else if (professionalList.length > 0) {
+                        setAgendaProfessional(professionalList[0].user_id);
+                    }
                 }
-                
-                if (defaultProfessionalId && !selectedProfessional) {
-                    setSelectedProfessional(defaultProfessionalId);
-                }
-
-            } catch (error) {
-                console.error("Erro ao buscar profissionais:", error);
+            } catch (error) { 
+                console.error("Erro ao buscar profissionais:", error); 
             } finally {
                 setIsFetchingProfessionals(false);
             }
         };
-        fetchProfessionals();
-    }, [user, selectedProfessional]);
+        fetchProfessionalsAndSetDefaults();
+    }, [user, setAgendaProfessional]);
 
     useEffect(() => {
-        if (!isFetchingProfessionals && selectedProfessional) {
-            fetchAppointments();
-        }
-    }, [fetchAppointments, isFetchingProfessionals, selectedProfessional]);
-
+        fetchAgendaData();
+    }, [fetchAgendaData]);
+    
     const handleCheckIn = async (appointmentId: string) => {
         const toastId = toast.loading("A fazer check-in...");
         try {
             await api.patch(`/appointments/${appointmentId}/check-in`);
             toast.success("Check-in realizado!", { id: toastId });
-            fetchAppointments();
+            fetchAgendaData();
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Falha no check-in.", { id: toastId });
         }
@@ -108,41 +101,32 @@ export default function AgendaPage() {
         <>
             <Header title="Agenda do Dia" />
             <main className="flex-1 overflow-y-auto p-6">
-                {!isFetchingProfessionals && professionals.length > 0 ? (
-                    <AgendaFilters 
-                        professionals={professionals}
-                        selectedProfessional={selectedProfessional}
-                        setSelectedProfessional={setSelectedProfessional}
-                        selectedDate={selectedDate}
-                        setSelectedDate={setSelectedDate}
-                    />
-                ) : (
-                    <div className="p-4 bg-white rounded-lg shadow-sm mb-6 text-center text-gray-500">
-                        A carregar filtros...
-                    </div>
-                )}
+                 <AgendaFilters 
+                    professionals={professionals}
+                />
+               
                 <AgendaTimeSlots 
                     appointments={appointments}
-                    isLoading={isLoading || isFetchingProfessionals}
+                    isLoading={isLoading}
                     onCheckIn={handleCheckIn}
                     onMarkAsMissed={handleOpenMissedModal}
                     onScheduleClick={handleOpenNewAppointmentModal}
-                    refreshAgenda={fetchAppointments}
+                    refreshAgenda={fetchAgendaData}
                 />
             </main>
             <NewAppointmentModal 
                 isOpen={isNewAppointmentModalOpen}
                 onClose={() => setIsNewAppointmentModalOpen(false)}
-                onAppointmentCreated={fetchAppointments}
+                onAppointmentCreated={fetchAgendaData}
                 slot={selectedSlot}
-                date={selectedDate}
-                professionalId={selectedProfessional}
+                date={agendaDate}
+                professionalId={agendaProfessional}
             />
             <MissedAppointmentModal 
                 isOpen={isMissedModalOpen}
                 appointment={appointmentForModal}
                 onClose={handleCloseMissedModal}
-                onUpdate={fetchAppointments}
+                onUpdate={fetchAgendaData}
             />
         </>
     );

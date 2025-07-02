@@ -2,8 +2,13 @@ const appointmentService = require('./appointmentsService');
 
 exports.getAppointments = async (req, res, next) => {
     try {
-        const { professionalId, date, status } = req.query;
-        const filters = { professionalId, date, statusArray: Array.isArray(status) ? status : (status ? [status] : []) };
+        const { professionalId, date, status, period } = req.query;
+        const filters = {
+            professionalId,
+            date,
+            statusArray: Array.isArray(status) ? status : (status ? [status] : []),
+            period
+        };
         const appointments = await appointmentService.getAppointments(filters);
         res.status(200).json(appointments);
     } catch (error) {
@@ -13,8 +18,25 @@ exports.getAppointments = async (req, res, next) => {
 
 exports.createAppointment = async (req, res, next) => {
     try {
-        // CORREÇÃO: Garantir que estamos a chamar o serviço correto de agendamentos.
         const newAppointment = await appointmentService.createAppointment(req.body);
+        res.status(201).json(newAppointment);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.addToWaitingList = async (req, res, next) => {
+    try {
+        const newEntry = await appointmentService.addToWaitingList(req.body);
+        res.status(201).json(newEntry);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.createOnDemandService = async (req, res, next) => {
+    try {
+        const newAppointment = await appointmentService.createOnDemandService(req.body);
         res.status(201).json(newAppointment);
     } catch (error) {
         next(error);
@@ -72,15 +94,6 @@ exports.completeService = async (req, res, next) => {
     try {
         const result = await appointmentService.completeService(req.params.id, req.body, req.user.user_id);
         res.status(200).json(result);
-    } catch (error) {
-        next(error);
-    }
-};
-
-exports.createOnDemandService = async (req, res, next) => {
-    try {
-        const newAppointment = await appointmentService.createOnDemandService(req.body);
-        res.status(201).json(newAppointment);
     } catch (error) {
         next(error);
     }

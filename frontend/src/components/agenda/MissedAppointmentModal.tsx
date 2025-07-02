@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 interface ModalProps {
-    isOpen: boolean; // Controlado pelo componente pai
+    isOpen: boolean; // <-- Propriedade adicionada
     appointment: Appointment | null;
     onClose: () => void;
     onUpdate: () => void;
@@ -18,7 +18,6 @@ export default function MissedAppointmentModal({ isOpen, appointment, onClose, o
     const [observation, setObservation] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Limpa o estado interno sempre que um novo agendamento é selecionado
     useEffect(() => {
         if (appointment) {
             setIsJustified(false);
@@ -26,7 +25,7 @@ export default function MissedAppointmentModal({ isOpen, appointment, onClose, o
         }
     }, [appointment]);
 
-    if (!isOpen || !appointment) return null;
+    if (!isOpen || !appointment) return null; // A verificação agora usa a prop 'isOpen'
 
     const handleConfirm = async () => {
         setIsLoading(true);
@@ -37,8 +36,8 @@ export default function MissedAppointmentModal({ isOpen, appointment, onClose, o
                 observation: isJustified ? observation : null,
             });
             toast.success("Status atualizado com sucesso!", { id: toastId });
-            onUpdate(); // Atualiza a lista de agendamentos
-            onClose(); // Fecha o modal
+            onUpdate();
+            onClose();
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Falha ao atualizar.", { id: toastId });
         } finally {
@@ -49,12 +48,12 @@ export default function MissedAppointmentModal({ isOpen, appointment, onClose, o
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up">
-                <div className="flex justify-between items-center mb-4 pb-4 border-b">
-                    <h3 className="text-lg font-bold text-gray-800">Marcar Falta</h3>
-                    <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"><X size={20}/></button>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold">Marcar Falta</h3>
+                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200"><X size={20}/></button>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
-                    A confirmar a falta para <span className="font-bold text-gray-900">{appointment.patient_name}</span> no horário das <span className="font-bold text-gray-900">{appointment.time}</span>.
+                    A confirmar a falta para <span className="font-bold">{appointment.patient_name}</span> no horário das {appointment.time}.
                 </p>
                 <div className="space-y-4">
                     <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">

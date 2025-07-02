@@ -8,38 +8,39 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import WaitingQueue from "@/components/dashboard/WaitingQueue";
 import toast from "react-hot-toast";
 import DashboardFilters from "@/components/dashboard/DashboardFilters";
+import { useFilterStore } from "@/stores/useFilterStore";
 
 export default function DashboardPage() {
     const { user } = useAuthStore();
+    const { dashboardProfessional, setDashboardProfessional, dashboardPeriod, dashboardDate } = useFilterStore();
+    
     const [queue, setQueue] = useState<Appointment[]>([]);
     const [professionals, setProfessionals] = useState<User[]>([]);
-    const [isLoadingQueue, setIsLoadingQueue] = useState(true);
-    const [isFetchingProfessionals, setIsFetchingProfessionals] = useState(true);
-    
-    const [selectedProfessional, setSelectedProfessional] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
 
     const fetchWaitingQueue = useCallback(async () => {
-        if (!selectedProfessional) return;
-
-        setIsLoadingQueue(true);
+        if (!dashboardProfessional) return;
+        setIsLoading(true);
         try {
-            const params: { date: string; status: string[]; professionalId?: string } = { 
-                date: new Date().toISOString().split('T')[0],
-                status: ['waiting', 'in_progress'],
+            const params: any = { 
+                date: dashboardDate,
+                status: ['waiting', 'in_progress', 'completed'],
             };
-            if (selectedProfessional !== 'all') {
-                params.professionalId = selectedProfessional;
+            if (dashboardProfessional !== 'all') {
+                params.professionalId = dashboardProfessional;
+            }
+            if (dashboardPeriod !== 'todos') {
+                params.period = dashboardPeriod;
             }
 
             const response = await api.get('/appointments', { params });
             setQueue(response.data);
         } catch (error) {
             toast.error("Não foi possível carregar a fila de atendimento.");
-            setQueue([]);
         } finally {
-            setIsLoadingQueue(false);
+            setIsLoading(false);
         }
-    }, [selectedProfessional]);
+    }, [dashboardProfessional, dashboardPeriod, dashboardDate]);
     
     useEffect(() => {
         const fetchProfessionals = async () => {
@@ -49,44 +50,29 @@ export default function DashboardPage() {
                 const professionalList: User[] = response.data.filter((u: User) => u.profile === 'normal');
                 setProfessionals(professionalList);
                 
-                if (!selectedProfessional) { // Define o padrão apenas na primeira carga
-                    if (user.profile === 'normal' && professionalList.some(p => p.user_id === user.user_id)) {
-                        setSelectedProfessional(user.user_id);
-                    } else {
-                        setSelectedProfessional('all');
-                    }
+                if (user.profile === 'normal') {
+                    setDashboardProfessional(user.user_id);
                 }
-            } catch (error) {
-                console.error("Erro ao buscar profissionais:", error);
-            } finally {
-                setIsFetchingProfessionals(false);
-            }
+            } catch (error) { console.error(error); }
         };
         fetchProfessionals();
-    }, [user, selectedProfessional]);
+    }, [user, setDashboardProfessional]);
 
     useEffect(() => {
-        if (!isFetchingProfessionals) {
-            fetchWaitingQueue();
-        }
-    }, [fetchWaitingQueue, isFetchingProfessionals]);
+        fetchWaitingQueue();
+    }, [fetchWaitingQueue]);
 
     return (
         <>
             <Header title="Fila de Atendimento do Dia" />
             <main className="flex-1 overflow-y-auto p-6">
-                 {!isFetchingProfessionals && (
-                     <DashboardFilters 
-                        professionals={professionals}
-                        selectedProfessional={selectedProfessional}
-                        setSelectedProfessional={setSelectedProfessional}
-                    />
-                )}
-               
+                <DashboardFilters 
+                    professionals={professionals}
+                />
                 <WaitingQueue 
                     queue={queue} 
-                    isLoading={isLoadingQueue}
-                    showProfessionalName={selectedProfessional === 'all'}
+                    isLoading={isLoading}
+                    showProfessionalName={dashboardProfessional === 'all'}
                 />
             </main>
         </>

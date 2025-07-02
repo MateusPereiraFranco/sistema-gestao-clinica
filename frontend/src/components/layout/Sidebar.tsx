@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { BriefcaseMedical, LayoutDashboard, Users, Calendar } from 'lucide-react';
+import { BriefcaseMedical, LayoutDashboard, Users, Calendar, ListChecks } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/pacientes', label: 'Pacientes', icon: Users },
   { href: '/dashboard/agenda', label: 'Agenda Completa', icon: Calendar },
+  { href: '/dashboard/lista-de-espera', label: 'Lista de Espera', icon: ListChecks },
 ];
 
 export default function Sidebar() {

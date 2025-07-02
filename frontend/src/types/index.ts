@@ -34,6 +34,10 @@ export interface Appointment {
     observations: string | null;
     vinculo: PatientVinculo; 
     professional_name?: string;
+    patient_cpf: string | null;
+    patient_mother_name: string;
+    date_formatted: string;
+    patient_birth_date: string;
 }
 
 export interface User {

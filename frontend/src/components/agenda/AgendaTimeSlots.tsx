@@ -61,7 +61,16 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
         setExpandedObservationId(prevId => (prevId === appointmentId ? null : appointmentId));
     };
     
-    const timeSlots = Array.from({ length: 20 }, (_, i) => `${String(8 + Math.floor((i * 30) / 60)).padStart(2, '0')}:${String((i * 30) % 60).padStart(2, '0')}`);
+    // O intervalo agora é fixo em 30 minutos.
+    const slotInterval = 30;
+    const timeSlots = [];
+    const startTime = 8 * 60;
+    const endTime = 18 * 60;
+    for (let time = startTime; time < endTime; time += slotInterval) {
+        const hour = Math.floor(time / 60);
+        const minute = time % 60;
+        timeSlots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
+    }
 
     if (isLoading) {
         return <div className="text-center p-10 text-gray-500">A carregar agenda...</div>;
@@ -74,9 +83,11 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                 
                 if (appointment) {
                     const vinculoStyle = getVinculoStyle(appointment.vinculo);
+                    const canAttend = user?.profile === 'master' || user?.user_id === appointment.professional_id;
                     const isExpanded = expandedObservationId === appointment.appointment_id;
+                    
                     return (
-                        <div key={slot} className={`bg-white p-4 rounded-lg shadow-sm border-l-4 ${vinculoStyle.borderColor} flex flex-col justify-between`}>
+                        <div key={slot} className={`bg-white p-4 rounded-lg shadow-sm border-l-4 ${vinculoStyle.borderColor} flex flex-col justify-between min-h-[160px]`}>
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <p className="font-bold text-gray-800 flex items-center gap-2"><Clock size={16} /> {slot}</p>
@@ -112,9 +123,9 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                                     )}
                                     {(appointment.status === 'waiting' || appointment.status === 'in_progress') && (
                                     <button 
-                                        onClick={() => handleStartService(appointment.appointment_id)}
-                                        disabled={user?.profile !== 'master' && user?.user_id !== appointment.professional_id}
-                                        className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-indigo-600 rounded-md p-2 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                        onClick={() => canAttend && handleStartService(appointment.appointment_id)}
+                                        disabled={!canAttend}
+                                        className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-indigo-600 rounded-md p-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed enabled:hover:bg-indigo-700"
                                     >
                                         <Stethoscope size={16} />
                                         {appointment.status === 'in_progress' ? 'Continuar Atend.' : 'Atender'}
@@ -131,7 +142,7 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                     );
                 } else {
                     return (
-                        <div key={slot} className="bg-gray-50/70 p-4 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-between transition hover:border-indigo-400 hover:bg-indigo-50">
+                        <div key={slot} className="bg-gray-50/70 p-4 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-between transition hover:border-indigo-400 hover:bg-indigo-50 min-h-[160px]">
                              <p className="font-bold text-gray-500 flex items-center gap-2"><Clock size={16} /> {slot}</p>
                              <button onClick={() => onScheduleClick(slot)} className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800">
                                 <Plus size={16} />
