@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { LogIn, Mail, Lock, BriefcaseMedical } from 'lucide-react';
+import { useFilterStore } from '@/stores/useFilterStore'; // <-- Importar a store de filtros
 
 interface LoginResponse {
   token: string;
@@ -21,6 +22,7 @@ export default function LoginPage() {
     const router = useRouter();
     const { user, setUser } = useAuthStore();
     const [isClient, setIsClient] = useState(false);
+    const { resetDatesToToday } = useFilterStore();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -45,6 +47,8 @@ export default function LoginPage() {
         try {
             const response = await api.post<LoginResponse>('/auth/login', { email, password });
             setUser(response.data.user, response.data.token);
+            // 2. Redefine as datas para o dia de hoje.
+            resetDatesToToday();
             toast.success(`Bem-vindo de volta, ${response.data.user.name}!`, { id: toastId });
             router.push('/dashboard');
         } catch (error: any) {

@@ -97,6 +97,19 @@ export default function AgendaPage() {
         setIsNewAppointmentModalOpen(true);
     };
 
+    const handleCancelAppointment = async (appointmentId: string) => {
+        if (window.confirm("Tem a certeza que deseja cancelar este agendamento?")) {
+            const toastId = toast.loading("A cancelar agendamento...");
+            try {
+                await api.patch(`/appointments/${appointmentId}/cancel`);
+                toast.success("Agendamento cancelado.", { id: toastId });
+                fetchAgendaData(); // Recarrega a agenda para mostrar o novo status
+            } catch (error: any) {
+                toast.error(error.response?.data?.error || "Falha ao cancelar.", { id: toastId });
+            }
+        }
+    };
+
     return (
         <>
             <Header title="Agenda do Dia" />
@@ -110,6 +123,7 @@ export default function AgendaPage() {
                     isLoading={isLoading}
                     onCheckIn={handleCheckIn}
                     onMarkAsMissed={handleOpenMissedModal}
+                    onCancel={handleCancelAppointment}
                     onScheduleClick={handleOpenNewAppointmentModal}
                     refreshAgenda={fetchAgendaData}
                 />

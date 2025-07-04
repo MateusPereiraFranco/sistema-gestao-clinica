@@ -56,3 +56,13 @@ exports.deletePatient = async (req, res, next) => {
         next(error);
     }
 };
+
+// NOVO CONTROLLER: Para a rota de histórico.
+exports.getPatientHistory = async (req, res, next) => {
+    try {
+        const historyData = await patientService.getPatientHistory(req.params.id);
+        res.status(200).json(historyData);
+    } catch (error) {
+        next(error);
+    }
+};

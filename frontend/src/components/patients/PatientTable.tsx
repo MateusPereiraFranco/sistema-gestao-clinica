@@ -44,6 +44,9 @@ export default function PatientTable({ patients, isLoading, onLaunchService, onD
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.mother_name}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.birth_date_formatted}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                <Link href={`/dashboard/pacientes/${patient.patient_id}/prontuario`} className="inline-flex items-center text-gray-600 hover:text-gray-900" title="Ver Prontuário">
+                                    <FileText className="w-5 h-5"/>
+                                </Link>
                                 <button onClick={() => onLaunchService(patient)} className="inline-flex items-center text-green-600 hover:text-green-900" title="Lançar Atendimento">
                                     <Stethoscope className="w-5 h-5"/>
                                 </button>

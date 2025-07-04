@@ -10,8 +10,10 @@ import Link from "next/link";
 import { useState, useCallback } from "react";
 import LaunchServiceModal from "@/components/patients/LaunchServiceModal";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function PacientesPage() {
+    const router = useRouter();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     
@@ -79,6 +81,7 @@ export default function PacientesPage() {
                 onClose={handleCloseModal}
                 onServiceLaunched={() => {
                     toast.success("Paciente encaminhado para a fila de atendimento.");
+                    router.push('/dashboard');
                 }}
             />
         </>

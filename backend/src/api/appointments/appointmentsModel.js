@@ -191,3 +191,38 @@ exports.findByProfessionalAndDateTime = async (professionalId, dateTime) => {
     const { rows } = await db.query(query, [professionalId, dateTime]);
     return rows[0];
 };
+
+// NOVA FUNÇÃO: Busca uma entrada específica na lista de espera para um paciente/profissional.
+exports.findWaitingListEntry = async (patientId, professionalId) => {
+    const query = `
+        SELECT * FROM appointments 
+        WHERE patient_id = $1 AND professional_id = $2 AND status = 'on_waiting_list'
+        LIMIT 1;
+    `;
+    const { rows } = await db.query(query, [patientId, professionalId]);
+    return rows[0];
+};
+
+// NOVA FUNÇÃO: Atualiza um agendamento da lista de espera para um agendamento agendado.
+exports.updateFromWaitingListToScheduled = async (appointmentId, newDateTime) => {
+    const query = `
+        UPDATE appointments 
+        SET status = 'scheduled', appointment_datetime = $1, observations = 'Promovido da lista de espera.'
+        WHERE appointment_id = $2
+        RETURNING *;
+    `;
+    const { rows } = await db.query(query, [newDateTime, appointmentId]);
+    return rows[0];
+};
+
+// NOVA FUNÇÃO: Atualiza um agendamento da lista de espera para um atendimento em andamento.
+exports.updateFromWaitingListToInProgress = async (appointmentId) => {
+    const query = `
+        UPDATE appointments 
+        SET status = 'waiting', appointment_datetime = NOW() 
+        WHERE appointment_id = $1 
+        RETURNING *;
+    `;
+    const { rows } = await db.query(query, [appointmentId]);
+    return rows[0];
+};

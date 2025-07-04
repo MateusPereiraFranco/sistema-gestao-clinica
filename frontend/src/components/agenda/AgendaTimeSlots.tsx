@@ -1,7 +1,7 @@
 'use client';
 
 import { Appointment, PatientVinculo } from "@/types";
-import { Clock, Plus, MessageSquare, UserX, UserCheck, Stethoscope, ChevronDown, ChevronUp, Eye } from "lucide-react";
+import { Clock, Plus, MessageSquare, UserX, UserCheck, Stethoscope, ChevronDown, ChevronUp, Eye, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -15,6 +15,7 @@ interface AgendaTimeSlotsProps {
     onCheckIn: (appointmentId: string) => void;
     onMarkAsMissed: (appointment: Appointment) => void;
     onScheduleClick: (slot: string) => void;
+    onCancel: (appointmentId: string) => void;
     refreshAgenda: () => void;
 }
 
@@ -26,6 +27,7 @@ const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
         completed: { text: "Concluído", style: "bg-green-100 text-green-800" },
         justified_absence: { text: "Falta Justificada", style: "bg-red-100 text-red-800" },
         unjustified_absence: { text: "Faltou", style: "bg-red-200 text-red-900 font-bold" },
+        canceled: { text: "Cancelado", style: "bg-gray-300 text-gray-900" },
     };
     const info = statusInfo[status] || statusInfo.scheduled;
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${info.style}`}>{info.text}</span>;
@@ -40,7 +42,7 @@ const getVinculoStyle = (vinculo: PatientVinculo | null) => {
     }
 }
 
-export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onScheduleClick, refreshAgenda }: AgendaTimeSlotsProps) {
+export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, onMarkAsMissed, onCancel, onScheduleClick, refreshAgenda }: AgendaTimeSlotsProps) {
     const { user } = useAuthStore();
     const router = useRouter();
     const [expandedObservationId, setExpandedObservationId] = useState<string | null>(null);
@@ -119,6 +121,12 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                                             <button onClick={() => onCheckIn(appointment.appointment_id)} className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-800 font-semibold p-2 rounded hover:bg-green-50">
                                                 <UserCheck size={14} /> Check-in
                                             </button>
+                                            {user?.profile === 'master' && (
+                                                <button onClick={() => onCancel(appointment.appointment_id)} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-700 font-semibold p-2 rounded hover:bg-red-50">
+                                                    <XCircle size={14} /> Cancelar
+                                                </button>
+                                            )}
+
                                         </>
                                     )}
                                     {(appointment.status === 'waiting' || appointment.status === 'in_progress') && (

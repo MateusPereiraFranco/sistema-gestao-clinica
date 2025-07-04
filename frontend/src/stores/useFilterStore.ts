@@ -17,6 +17,7 @@ interface FilterState {
   setAgendaDate: (date: string) => void;
   waitingListProfessional: string;
   setWaitingListProfessional: (id: string) => void;
+  resetDatesToToday: () => void;
 }
 
 export const useFilterStore = create<FilterState>()(
@@ -36,6 +37,10 @@ export const useFilterStore = create<FilterState>()(
       agendaDate: new Date().toISOString().split('T')[0],
       setAgendaProfessional: (id) => set({ agendaProfessional: id }),
       setAgendaDate: (date) => set({ agendaDate: date }),
+      resetDatesToToday: () => set({
+        dashboardDate: new Date().toISOString().split('T')[0],
+        agendaDate: new Date().toISOString().split('T')[0],
+      }),
     }),
     {
       name: 'app-filter-storage',

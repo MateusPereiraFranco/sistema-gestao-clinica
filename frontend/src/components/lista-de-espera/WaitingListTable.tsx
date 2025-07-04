@@ -63,7 +63,7 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                                 <td className="px-6 py-4 text-sm text-gray-700">{item.date_formatted}</td>
                                 <td className="px-6 py-4 text-right">
                                     <button onClick={() => handleAttend(item)} disabled={!canAttend}
-                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-700 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-indigo-800 disabled:bg-gray-400 disabled:cursor-not-allowed">
                                         <Stethoscope size={16} /> Atender
                                     </button>
                                 </td>

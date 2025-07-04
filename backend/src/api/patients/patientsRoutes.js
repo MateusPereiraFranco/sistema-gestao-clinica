@@ -9,6 +9,8 @@ router.route('/')
     .post(patientController.createPatient)
     .get(patientController.getAllPatients);
 
+// NOVA ROTA: Rota dedicada para buscar o histórico de um paciente.
+router.get('/:id/history', patientController.getPatientHistory);
 
 router.get('/:id/for-edit', patientController.getPatientForEdit);
 

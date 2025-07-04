@@ -1,7 +1,7 @@
 'use client';
 
 import { Appointment, PatientVinculo } from "@/types";
-import { Stethoscope, Clock, UserCheck, Eye } from "lucide-react";
+import { Stethoscope, Clock, UserCheck, Eye, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/useAuthStore";
 import toast from "react-hot-toast";
@@ -10,6 +10,7 @@ interface WaitingQueueProps {
     queue: Appointment[];
     isLoading: boolean;
     showProfessionalName?: boolean;
+    onCancel: (appointmentId: string) => void;
 }
 
 const getVinculoStyle = (vinculo: PatientVinculo | null) => {
@@ -21,7 +22,7 @@ const getVinculoStyle = (vinculo: PatientVinculo | null) => {
     }
 }
 
-export default function WaitingQueue({ queue, isLoading, showProfessionalName = false }: WaitingQueueProps) {
+export default function WaitingQueue({ queue, isLoading, showProfessionalName = false, onCancel }: WaitingQueueProps) {
     const { user } = useAuthStore();
 
     if (isLoading) {
@@ -42,7 +43,6 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
             {queue.map(item => {
                 const vinculoStyle = getVinculoStyle(item.vinculo);
                 const canAttend = user?.profile === 'master' || user?.user_id === item.professional_id;
-                console.log('Item:', item);
                 return (
                     <div key={item.appointment_id} className={`p-4 bg-white rounded-lg shadow-sm flex items-center justify-between border-l-4 ${vinculoStyle.borderColor}`}>
                         <div className="flex items-center gap-4">
@@ -57,6 +57,7 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                 </div>
                             </div>
                         </div>
+                        <div className="flex items-center gap-2">
                         {item.status === 'completed' ? (
                             <div className="flex items-center gap-4">
                                 <span className="text-sm text-green-600 font-semibold">Atendido</span>
@@ -65,22 +66,39 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                 </Link>
                             </div>
                         ) : (
-                            <Link 
-                                href={`/dashboard/atendimento/${item.appointment_id}`}
-                                className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors
-                                    ${canAttend ? 'hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed'}`
-                                }
-                                onClick={(e) => {
-                                    if (!canAttend) {
-                                        e.preventDefault();
-                                        toast.error("Apenas o profissional responsável pode atender.");
+                        item.status === 'canceled' ? (
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm text-red-600 font-semibold">Cancelado</span>
+                            </div>
+                        ) : (
+                            <>
+                                <Link 
+                                    href={`/dashboard/atendimento/${item.appointment_id}`}
+                                    className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors
+                                        ${canAttend ? 'hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed'}`
                                     }
-                                }}
-                            >
-                                <Stethoscope size={18} />
-                                {item.status === 'in_progress' ? 'Continuar' : 'Atender'}
-                            </Link>
-                        )}
+                                    onClick={(e) => {
+                                        if (!canAttend) {
+                                            e.preventDefault();
+                                            toast.error("Apenas o profissional responsável pode atender.");
+                                        }
+                                    }}
+                                >
+                                    <Stethoscope size={18} />
+                                    {item.status === 'in_progress' ? 'Continuar' : 'Atender'}
+                                </Link>
+                                {user?.profile === 'master' && (
+                                <button
+                                    onClick={() => onCancel(item.appointment_id)}
+                                    className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-red-700 font-semibold p-2 rounded hover:bg-red-50"
+                                    title="Cancelar Atendimento"
+                                >
+                                    <XCircle size={18} />Cancelar
+                                </button>
+                                )}
+                            </>
+                        ))}
+                    </div>
                     </div>
                 )
             })}

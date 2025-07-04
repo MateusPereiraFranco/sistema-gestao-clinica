@@ -30,6 +30,10 @@ exports.findWithFilters = async (filters) => {
         conditions.push(`cns = $${paramIndex++}`);
         params.push(filters.cns);
     }
+    if (filters.birth_date) {
+        conditions.push(`birth_date = $${paramIndex++}`);
+        params.push(filters.birth_date);
+    }
 
     if (conditions.length === 0) return [];
 
@@ -142,4 +146,23 @@ exports.findByIdForEdit = async (id) => {
 exports.remove = async (id) => {
     const { rowCount } = await db.query('DELETE FROM patients WHERE patient_id = $1;', [id]);
     return rowCount;
+};
+
+// NOVA FUNÇÃO: Busca o histórico completo de atendimentos de um paciente.
+exports.findHistoryByPatientId = async (patientId) => {
+    const query = `
+        SELECT
+            apt.appointment_id,
+            to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as date,
+            to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') as time,
+            apt.service_type,
+            apt.status,
+            u.name as professional_name
+        FROM appointments apt
+        JOIN users u ON apt.professional_id = u.user_id
+        WHERE apt.patient_id = $1
+        ORDER BY apt.appointment_datetime DESC;
+    `;
+    const { rows } = await db.query(query, [patientId]);
+    return rows;
 };

@@ -98,3 +98,42 @@ exports.completeService = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.checkWaitingList = async (req, res, next) => {
+    try {
+        const { patientId, professionalId } = req.query;
+        const entry = await appointmentService.checkWaitingList(patientId, professionalId);
+        res.status(200).json(entry || null);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// NOVO CONTROLLER
+exports.scheduleFromWaitlist = async (req, res, next) => {
+    try {
+        const { newDateTime } = req.body;
+        const updatedAppointment = await appointmentService.scheduleFromWaitlist(req.params.id, newDateTime);
+        res.status(200).json(updatedAppointment);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.attendFromWaitlist = async (req, res, next) => {
+    try {
+        const updatedAppointment = await appointmentService.attendFromWaitlist(req.params.id);
+        res.status(200).json(updatedAppointment);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.cancelAppointment = async (req, res, next) => {
+    try {
+        const updatedAppointment = await appointmentService.cancelAppointment(req.params.id);
+        res.status(200).json(updatedAppointment);
+    } catch (error) {
+        next(error);
+    }
+};

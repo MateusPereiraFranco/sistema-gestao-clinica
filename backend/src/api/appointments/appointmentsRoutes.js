@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const appointmentController = require('./appointmentsController');
-const { protect } = require('../../middlewares/authMiddleware');
+const { protect, restrictTo } = require('../../middlewares/authMiddleware');
 
 const router = Router();
 router.use(protect);
@@ -14,6 +14,12 @@ router.post('/:id/complete-service', appointmentController.completeService);
 router.get('/:id/view', appointmentController.getCompletedServiceForView);
 router.post('/on-demand', appointmentController.createOnDemandService);
 router.post('/waiting-list', appointmentController.addToWaitingList);
+
+router.get('/check-waiting-list', appointmentController.checkWaitingList);
+router.patch('/:id/schedule-from-waitlist', appointmentController.scheduleFromWaitlist);
+router.patch('/:id/attend-from-waitlist', appointmentController.attendFromWaitlist);
+
+router.patch('/:id/cancel', restrictTo('master'), appointmentController.cancelAppointment);
 
 // Rotas para gerir o ciclo de vida
 router.patch('/:id/check-in', appointmentController.checkIn);

@@ -24,7 +24,7 @@ export default function DashboardPage() {
         try {
             const params: any = { 
                 date: dashboardDate,
-                status: ['waiting', 'in_progress', 'completed'],
+                status: ['waiting', 'in_progress', 'completed', 'canceled'],
             };
             if (dashboardProfessional !== 'all') {
                 params.professionalId = dashboardProfessional;
@@ -62,6 +62,19 @@ export default function DashboardPage() {
         fetchWaitingQueue();
     }, [fetchWaitingQueue]);
 
+    const handleCancelAppointment = async (appointmentId: string) => {
+        if (window.confirm("Tem a certeza que deseja cancelar este atendimento?")) {
+            const toastId = toast.loading("A cancelar...");
+            try {
+                await api.patch(`/appointments/${appointmentId}/cancel`);
+                toast.success("Atendimento cancelado.", { id: toastId });
+                fetchWaitingQueue(); // Atualiza a lista para refletir a mudança
+            } catch (error: any) {
+                toast.error(error.response?.data?.error || "Falha ao cancelar.", { id: toastId });
+            }
+        }
+    };
+
     return (
         <>
             <Header title="Fila de Atendimento do Dia" />
@@ -73,6 +86,7 @@ export default function DashboardPage() {
                     queue={queue} 
                     isLoading={isLoading}
                     showProfessionalName={dashboardProfessional === 'all'}
+                    onCancel={handleCancelAppointment}
                 />
             </main>
         </>

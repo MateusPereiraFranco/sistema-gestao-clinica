@@ -157,6 +157,11 @@ exports.getServiceDetails = async (appointmentId) => {
 exports.completeService = async (appointmentId, data, loggedInUserId) => {
     const { evolution, referral_ids, discharge_given, follow_up_days } = data;
 
+    const loggedInUser = await userModel.findById(loggedInUserId);
+    if (!loggedInUser) {
+        throw new Error("Utilizador autenticado não encontrado.");
+    }
+
     const appointment = await appointmentModel.findById(appointmentId);
     if (!appointment) throw new Error("Agendamento não encontrado.");
     if (appointment.professional_id !== loggedInUserId) throw new Error("Não autorizado.");
@@ -166,6 +171,31 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
         'INSERT INTO medical_records (patient_id, professional_id, appointment_id, evolution) VALUES ($1, $2, $3, $4)',
         [appointment.patient_id, loggedInUserId, appointmentId, evolution]
     );
+
+    if (referral_ids && referral_ids.length > 0) {
+        for (const professionalId of referral_ids) {
+            // Verifica se o paciente já está na lista de espera para este profissional
+            const existingEntry = await appointmentModel.findWaitingListEntry(appointment.patient_id, professionalId);
+
+            // Se não estiver, cria a nova entrada na lista de espera
+            if (!existingEntry) {
+                const professional = await userModel.findById(professionalId);
+                if (professional) {
+                    const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [professional.specialty_id]);
+                    const specialtyName = specialtyResponse.rows[0]?.name || 'Atendimento Geral';
+                    await appointmentModel.create({
+                        patient_id: appointment.patient_id,
+                        professional_id: professionalId,
+                        unit_id: professional.unit_id,
+                        appointment_datetime: new Date(), // A data da solicitação é hoje
+                        service_type: specialtyName,
+                        observations: `Encaminhado por Dr(a). ${loggedInUser.name} em ${new Date().toLocaleDateString('pt-BR')}`,
+                        status: 'on_waiting_list'
+                    });
+                }
+            }
+        }
+    }
 
     // Regra de negócio: Cria os encaminhamentos
     await appointmentModel.createReferrals(appointmentId, referral_ids);
@@ -228,4 +258,40 @@ exports.getCompletedServiceDetails = async (appointmentId) => {
         throw error;
     }
     return details;
+};
+
+// NOVO SERVIÇO: Para verificar a lista de espera.
+exports.checkWaitingList = async (patientId, professionalId) => {
+    return appointmentModel.findWaitingListEntry(patientId, professionalId);
+};
+
+// NOVO SERVIÇO: Para agendar a partir da lista de espera.
+exports.scheduleFromWaitlist = async (appointmentId, newDateTime) => {
+    return appointmentModel.updateFromWaitingListToScheduled(appointmentId, newDateTime);
+};
+
+exports.attendFromWaitlist = async (appointmentId) => {
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment || appointment.status !== 'on_waiting_list') {
+        throw new Error("Agendamento na lista de espera não encontrado.");
+    }
+    return appointmentModel.updateFromWaitingListToInProgress(appointmentId);
+};
+
+exports.cancelAppointment = async (appointmentId) => {
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment) {
+        const error = new Error('Agendamento não encontrado.');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Regra de negócio: Não se pode cancelar um atendimento já concluído.
+    if (appointment.status === 'completed') {
+        const error = new Error('Não é possível cancelar um atendimento que já foi concluído.');
+        error.statusCode = 409; // Conflict
+        throw error;
+    }
+
+    return appointmentModel.updateStatus(appointmentId, 'canceled');
 };

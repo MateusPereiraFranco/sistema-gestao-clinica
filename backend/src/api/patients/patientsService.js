@@ -93,3 +93,23 @@ exports.deletePatient = async (id) => {
         throw error;
     }
 };
+
+// NOVA FUNÇÃO: Serviço para obter o histórico do paciente.
+exports.getPatientHistory = async (patientId) => {
+    // Primeiro, busca o paciente para garantir que ele existe.
+    const patient = await patientModel.findById(patientId);
+    if (!patient) {
+        const error = new Error('Paciente não encontrado.');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const history = await patientModel.findHistoryByPatientId(patientId);
+
+    // Retorna os dados do paciente e o seu histórico.
+    return {
+        patient_id: patient.patient_id,
+        name: patient.name,
+        history: history
+    };
+};
