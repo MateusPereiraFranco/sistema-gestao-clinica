@@ -7,6 +7,7 @@ const patientRoutes = require('./api/patients/patientsRoutes');
 const userRoutes = require('./api/users/usersRoutes');
 const appointmentRoutes = require('./api/appointments/appointmentsRoutes');
 const specialtyRoutes = require('./api/specialties/specialtiesRoutes'); // <-- Importar
+const reportsRoutes = require('./api/reports/reportsRoutes');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/specialties', specialtyRoutes);
+app.use('/api/reports', reportsRoutes);
 
 app.use(errorHandler);
 
