@@ -22,6 +22,7 @@ const StatusBadge = ({ status }: { status: AppointmentStatus }) => {
         completed: { text: "Concluído", style: "bg-green-100 text-green-800" },
         justified_absence: { text: "Falta Justificada", style: "bg-red-100 text-red-800" },
         unjustified_absence: { text: "Faltou", style: "bg-red-200 text-red-900 font-bold" },
+        canceled : { text: "Cancelado", style: "bg-gray-300 text-gray-700" },
     };
     const info = statusInfo[status] || statusInfo.scheduled;
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${info.style}`}>{info.text}</span>;
@@ -72,12 +73,15 @@ export default function ProntuarioPage() {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{item.professional_name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{item.service_type}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={item.status} /></td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    {item.status === 'completed' && (
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                         <Link href={`/dashboard/atendimento/${item.appointment_id}/visualizar`}
                                             className="text-indigo-600 hover:text-indigo-900 inline-flex items-center gap-1">
                                             <Eye size={16} /> Visualizar
                                         </Link>
                                     </td>
+                                    )}
+                                    
                                 </tr>
                             ))}
                         </tbody>

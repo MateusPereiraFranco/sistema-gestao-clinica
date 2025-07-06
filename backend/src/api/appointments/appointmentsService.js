@@ -122,7 +122,7 @@ exports.startService = async (appointmentId, loggedInUserId) => {
         throw error;
     }
 
-    if (appointment.professional_id !== loggedInUserId && loggedInUserId !== 'MASTER_ID_HARDCODED') { // Permite que um master sobreponha
+    if (appointment.professional_id !== loggedInUserId) {
         const loggedInUser = await userModel.findById(loggedInUserId);
         if (loggedInUser.profile !== 'master') {
             const error = new Error('Você não tem permissão para atender este paciente.');
@@ -195,6 +195,24 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
                 }
             }
         }
+    }
+
+    // 4. LÓGICA DE NEGÓCIO: Se houver um retorno, cria uma nova entrada na lista de espera.
+    if (!discharge_given && follow_up_days && Number(follow_up_days) > 0) {
+        // Calcula a data do retorno
+        const returnDate = new Date();
+        returnDate.setDate(returnDate.getDate() + Number(follow_up_days));
+
+        // Cria a nova entrada na lista de espera para o mesmo profissional
+        await appointmentModel.create({
+            patient_id: appointment.patient_id,
+            professional_id: loggedInUserId,
+            unit_id: loggedInUser.unit_id,
+            appointment_datetime: returnDate,
+            service_type: loggedInUser.specialty_name || 'Retorno',
+            observations: `Retorno solicitado em ${follow_up_days} dias pelo(a) Dr(a). ${loggedInUser.name}.`,
+            status: 'on_waiting_list'
+        });
     }
 
     // Regra de negócio: Cria os encaminhamentos

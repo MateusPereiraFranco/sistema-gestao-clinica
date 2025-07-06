@@ -1,5 +1,5 @@
 export type PatientVinculo = 'educação' | 'saude' | 'AMA' | 'nenhum';
-export type AppointmentStatus = | 'scheduled' | 'waiting' | 'in_progress' | 'completed' | 'justified_absence' | 'unjustified_absence' | 'canceled';;
+export type AppointmentStatus = | 'scheduled' | 'waiting' | 'in_progress' | 'completed' | 'justified_absence' | 'unjustified_absence' | 'canceled';
 
 export interface Patient {
     patient_id: string;

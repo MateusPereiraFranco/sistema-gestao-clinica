@@ -48,6 +48,7 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {list.map(item => {
+                        console.log(item);
                         const canAttend = user?.profile === 'master' || user?.user_id === item.professional_id;
                         return (
                             <tr key={item.appointment_id}>
@@ -61,6 +62,11 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-700">{item.professional_name}</td>
                                 <td className="px-6 py-4 text-sm text-gray-700">{item.date_formatted}</td>
+                                {item.service_type && item.service_type === 'Retorno' ? (
+                                    <td className="px-6 py-4 text-sm text-gray-700">{item.observations}</td>
+                                ) : (
+                                    <td className="px-6 py-4 text-sm text-gray-700">N/A</td>
+                                )}
                                 <td className="px-6 py-4 text-right">
                                     <button onClick={() => handleAttend(item)} disabled={!canAttend}
                                         className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-700 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-indigo-800 disabled:bg-gray-400 disabled:cursor-not-allowed">
