@@ -9,7 +9,7 @@ exports.getAppointments = async (req, res, next) => {
             statusArray: Array.isArray(status) ? status : (status ? [status] : []),
             period
         };
-        const appointments = await appointmentService.getAppointments(filters);
+        const appointments = await appointmentService.getAppointments(filters, req.user);
         res.status(200).json(appointments);
     } catch (error) {
         next(error);
@@ -18,7 +18,7 @@ exports.getAppointments = async (req, res, next) => {
 
 exports.createAppointment = async (req, res, next) => {
     try {
-        const newAppointment = await appointmentService.createAppointment(req.body);
+        const newAppointment = await appointmentService.createAppointment(req.body, req.user);
         res.status(201).json(newAppointment);
     } catch (error) {
         next(error);

@@ -1,7 +1,7 @@
 const db = require('../../config/db');
 
 exports.getGroupedServicesSummary = async (filters) => {
-    const { startDate, endDate, professionalId } = filters;
+    const { startDate, endDate, professionalId, unitId } = filters;
 
     let query = `
         SELECT
@@ -22,16 +22,24 @@ exports.getGroupedServicesSummary = async (filters) => {
             ) apt ON u.user_id = apt.professional_id
         LEFT JOIN
             patients p ON apt.patient_id = p.patient_id
-        WHERE
-            u.profile = 'normal' AND u.is_active = TRUE
     `;
     const params = [startDate, endDate];
     let paramIndex = 3;
+
+    const whereConditions = ["u.profile = 'normal'", "u.is_active = TRUE"];
 
     if (professionalId && professionalId !== 'all') {
         query += ` AND u.user_id = $${paramIndex++}`;
         params.push(professionalId);
     }
+
+    // Adiciona o filtro de unidade à consulta se ele for fornecido
+    if (unitId) {
+        whereConditions.push(`u.unit_id = $${paramIndex++}`);
+        params.push(unitId);
+    }
+
+    query += ` WHERE ${whereConditions.join(' AND ')}`;
 
     query += `
         GROUP BY

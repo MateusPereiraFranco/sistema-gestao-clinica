@@ -34,6 +34,10 @@ exports.findWithFilters = async (filters) => {
         conditions.push(`birth_date = $${paramIndex++}`);
         params.push(filters.birth_date);
     }
+    if (filters.unitId) {
+        conditions.push(`unit_id = $${paramIndex++}`);
+        params.push(filters.unitId);
+    }
 
     if (conditions.length === 0) return [];
 

@@ -1,8 +1,12 @@
 const reportsModel = require('./reportsModel');
 
-exports.getGroupedSummaryReport = async (filters) => {
+exports.getGroupedSummaryReport = async (filters, user) => {
     if (!filters.startDate || !filters.endDate) {
         throw new Error("Data de início e data de fim são obrigatórias.");
+    }
+
+    if (user.profile === 'master' || user.profile === 'normal') {
+        filters.unitId = user.unit_id;
     }
     const flatData = await reportsModel.getGroupedServicesSummary(filters);
 

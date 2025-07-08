@@ -2,7 +2,7 @@ const userService = require('./usersService');
 
 exports.createUser = async (req, res, next) => {
     try {
-        const newUser = await userService.createUser(req.body);
+        const newUser = await userService.createUser(req.body, req.user);
         res.status(201).json(newUser);
     } catch (error) {
         next(error);
@@ -11,7 +11,7 @@ exports.createUser = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const users = await userService.getAllUsers();
+        const users = await userService.getAllUsers(req.user);
         res.status(200).json(users);
     } catch (error) {
         next(error);
@@ -20,7 +20,7 @@ exports.getAllUsers = async (req, res, next) => {
 
 exports.getUserById = async (req, res, next) => {
     try {
-        const user = await userService.getUserById(req.params.id);
+        const user = await userService.getUserById(req.params.id, req.user);
         res.status(200).json(user);
     } catch (error) {
         next(error);

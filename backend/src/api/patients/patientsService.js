@@ -1,7 +1,10 @@
 const patientModel = require('./patientsModel');
 const { isValidCPF, isValidCNS } = require('../../utils/validators');
 
-exports.getAllPatients = (filters) => {
+exports.getAllPatients = (filters, user) => {
+    if (user.profile === 'master' || user.profile === 'normal') {
+        filters.unitId = user.unit_id;
+    }
     return patientModel.findWithFilters(filters);
 };
 
@@ -10,6 +13,11 @@ exports.getPatientForEdit = async (id) => {
     if (!patient) {
         const error = new Error('Paciente não encontrado.');
         error.statusCode = 404;
+        throw error;
+    }
+    if (user.profile === 'master' || user.profile === 'normal' && patient.unit_id !== user.unit_id) {
+        const error = new Error('Acesso negado a este paciente.');
+        error.statusCode = 403;
         throw error;
     }
     return patient;
@@ -46,7 +54,7 @@ exports.createPatient = async (patientData, userId) => {
         throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
     }
 
-    const fullPatientData = { ...patientData, registered_by: userId };
+    const fullPatientData = { ...patientData, registered_by: userId, unit_id: user.unit_id };
     return patientModel.create(fullPatientData);
 };
 

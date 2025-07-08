@@ -5,7 +5,7 @@ exports.getAllPatients = async (req, res, next) => {
     try {
         // Ex: /api/patients?name=João&cpf=123
         const filters = req.query;
-        const patients = await patientService.getAllPatients(filters);
+        const patients = await patientService.getAllPatients(filters, req.user);
         res.status(200).json(patients);
     } catch (error) {
         next(error);

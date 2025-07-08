@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const userController = require('./usersController');
 const { protect, restrictTo } = require('../../middlewares/authMiddleware');
+const { checkUnitAccess } = require('../../middlewares/permissionMiddleware');
 
 const router = Router();
 
@@ -15,8 +16,8 @@ router.route('/')
 
 router.route('/:id')
     // Apenas um master pode ver, atualizar ou apagar os detalhes de um utilizador.
-    .get(protect, restrictTo('master'), userController.getUserById)
-    .put(protect, restrictTo('master'), userController.updateUser)
-    .delete(protect, restrictTo('master'), userController.deleteUser);
+    .get(protect, checkUnitAccess('patients'), restrictTo('master'), userController.getUserById)
+    .put(protect, checkUnitAccess('patients'), restrictTo('master'), userController.updateUser)
+    .delete(protect, checkUnitAccess('patients'), restrictTo('master'), userController.deleteUser);
 
 module.exports = router;

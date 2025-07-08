@@ -1,6 +1,6 @@
 const appointmentModel = require('./appointmentsModel');
 const userModel = require('../users/usersModel');
-const db = require('../../config/db'); // <-- CORREÇÃO: Importação adicionada
+const db = require('../../config/db');
 
 exports.getAppointmentsByProfessionalAndDate = async (professionalId, date) => {
     if (!professionalId || !date) {
@@ -11,7 +11,17 @@ exports.getAppointmentsByProfessionalAndDate = async (professionalId, date) => {
     return appointmentModel.findByProfessionalAndDate(professionalId, date);
 };
 
-exports.getAppointments = async (filters) => {
+exports.getAppointments = async (filters, user) => {
+    if (!filters.professionalId) {
+        filters.professionalId = user.user_id;
+        return appointmentModel.findAppointments(filters);
+    }
+    if (filters.professionalId !== undefined) {
+        const professional = await userModel.findById(filters.professionalId);
+        if (professional.unit_id !== user.unit_id) {
+            throw new Error("Não autorizado a ver a agenda deste profissional.");
+        }
+    }
     return appointmentModel.findAppointments(filters);
 };
 
@@ -187,7 +197,7 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
                         patient_id: appointment.patient_id,
                         professional_id: professionalId,
                         unit_id: professional.unit_id,
-                        appointment_datetime: new Date(), // A data da solicitação é hoje
+                        appointment_datetime: new Date(),
                         service_type: specialtyName,
                         observations: `Encaminhado por Dr(a). ${loggedInUser.name} em ${new Date().toLocaleDateString('pt-BR')}`,
                         status: 'on_waiting_list'
@@ -199,16 +209,12 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
 
     // 4. LÓGICA DE NEGÓCIO: Se houver um retorno, cria uma nova entrada na lista de espera.
     if (!discharge_given && follow_up_days && Number(follow_up_days) > 0) {
-        // Calcula a data do retorno
-        const returnDate = new Date();
-        returnDate.setDate(returnDate.getDate() + Number(follow_up_days));
-
         // Cria a nova entrada na lista de espera para o mesmo profissional
         await appointmentModel.create({
             patient_id: appointment.patient_id,
             professional_id: loggedInUserId,
             unit_id: loggedInUser.unit_id,
-            appointment_datetime: returnDate,
+            appointment_datetime: new Date(),
             service_type: loggedInUser.specialty_name || 'Retorno',
             observations: `Retorno solicitado em ${follow_up_days} dias pelo(a) Dr(a). ${loggedInUser.name}.`,
             status: 'on_waiting_list'
@@ -258,7 +264,6 @@ exports.createOnDemandService = async (data) => {
         patient_id,
         professional_id,
         unit_id: professional.unit_id,
-        // CORREÇÃO: Não geramos mais a data aqui. Deixamos a base de dados fazer isso.
         appointment_datetime: null,
         service_type: specialtyName,
         observations: 'Atendimento avulso (gerado na receção)',

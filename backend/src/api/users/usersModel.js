@@ -27,16 +27,22 @@ exports.findAllActive = async () => {
 };
 
 // Modificado para incluir o nome da especialidade através de um JOIN
-exports.findAll = async () => {
-    const query = `
-        SELECT 
-            u.user_id, u.name, u.email, u.profile, u.is_active,
-            s.name as specialty_name
+exports.findAll = async (unitId) => {
+    let query = `
+        SELECT u.user_id, u.name, u.email, u.profile, s.name as specialty_name, un.name as unit_name
         FROM users u
         LEFT JOIN specialties s ON u.specialty_id = s.specialty_id
-        ORDER BY u.name;
+        LEFT JOIN units un ON u.unit_id = un.unit_id
+        WHERE u.is_active = TRUE
     `;
-    const { rows } = await db.query(query);
+    const params = [];
+    if (unitId) {
+        query += ' AND u.unit_id = $1';
+        params.push(unitId);
+    }
+    query += ' ORDER BY u.name;';
+
+    const { rows } = await db.query(query, params);
     return rows;
 };
 

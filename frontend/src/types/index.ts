@@ -45,7 +45,7 @@ export interface User {
     user_id: string;
     name: string;
     email: string;
-    profile: 'master' | 'normal';
+    profile: 'admin | master' | 'normal';
     specialty_name?: string;
 }
 

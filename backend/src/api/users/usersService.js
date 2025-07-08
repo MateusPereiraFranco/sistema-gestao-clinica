@@ -1,20 +1,28 @@
 const userModel = require('./usersModel');
 
 // Apenas uma pequena modificação na validação, o resto é igual
-exports.createUser = async (userData) => {
+exports.createUser = async (userData, requestingUser) => {
     const { email, password, name, specialty_id } = userData; // specialty_id é opcional
     if (!email || !password || !name) {
         const error = new Error('Nome, email e palavra-passe são obrigatórios.');
         error.statusCode = 400;
         throw error;
     }
+    // Se o criador for 'master', força o novo utilizador a pertencer à mesma unidade.
+    if (requestingUser.profile === 'master') {
+        userData.unit_id = requestingUser.unit_id;
+    }
     return userModel.create(userData);
 };
 
 // ... (outras funções do serviço permanecem as mesmas) ...
-exports.getAllUsers = async () => {
-    return userModel.findAll();
+exports.getAllUsers = async (requestingUser) => {
+    if (requestingUser.profile === 'admin') {
+        return userModel.findAll();
+    }
+    return userModel.findAll(requestingUser.unit_id);
 };
+
 exports.getUserById = async (id) => {
     const user = await userModel.findById(id);
     if (!user) {
@@ -25,6 +33,7 @@ exports.getUserById = async (id) => {
     delete user.password_hash;
     return user;
 };
+
 exports.updateUser = async (id, userData) => {
     const userToUpdate = await userModel.findById(id);
     if (!userToUpdate) {

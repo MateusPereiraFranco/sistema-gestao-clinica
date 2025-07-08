@@ -8,6 +8,12 @@ export default function UserNav() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
 
+  const getProfileName = () => {
+    if (user?.profile === 'admin') return 'Administrador do Sistema';
+    if (user?.profile === 'master') return 'Gestor da Unidade';
+    return 'Profissional';
+  };
+
   const handleLogout = () => {
     logout();
     router.push('/login');
@@ -17,7 +23,7 @@ export default function UserNav() {
     <div className="flex items-center gap-4">
       <div className="text-right">
         <p className="text-sm font-medium">{user?.name}</p>
-        <p className="text-xs text-gray-500">{user?.profile === 'master' ? 'Administrador' : 'Profissional'}</p>
+        <p className="text-xs text-gray-500">{getProfileName()}</p>
       </div>
        <button
         onClick={handleLogout}
