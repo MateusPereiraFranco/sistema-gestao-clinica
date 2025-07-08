@@ -1,6 +1,16 @@
 export type PatientVinculo = 'educação' | 'saude' | 'AMA' | 'nenhum';
 export type AppointmentStatus = | 'scheduled' | 'waiting' | 'in_progress' | 'completed' | 'justified_absence' | 'unjustified_absence' | 'canceled';
 
+export interface Unit {
+    unit_id: string;
+    name: string;
+}
+
+export interface Specialty {
+    specialty_id: string;
+    name: string;
+}
+
 export interface Patient {
     patient_id: string;
     name: string;
@@ -20,6 +30,7 @@ export interface Patient {
     state: string;
     observations: string | null;
     vinculo: PatientVinculo;
+    unit_id: string | null;
 }
 
 export interface Appointment {
@@ -47,6 +58,7 @@ export interface User {
     email: string;
     profile: 'admin | master' | 'normal';
     specialty_name?: string;
+    unit_id: string | null;
 }
 
 export interface ServiceDetails {

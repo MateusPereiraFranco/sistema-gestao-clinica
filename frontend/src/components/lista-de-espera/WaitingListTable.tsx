@@ -20,11 +20,8 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
     const handleAttend = async (appointment: Appointment) => {
         const toastId = toast.loading("A iniciar atendimento...");
         try {
-            console.log("to aqui")
             await api.patch(`/appointments/${appointment.appointment_id}/check-in`);
-            console.log('Check-in realizado com sucesso');
             await api.patch(`/appointments/${appointment.appointment_id}/start-service`);
-            console.log('Atendimento iniciado com sucesso');
             toast.success("Atendimento iniciado!", { id: toastId });
             router.push(`/dashboard/atendimento/${appointment.appointment_id}`);
         } catch (error: any) {
@@ -48,7 +45,6 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {list.map(item => {
-                        console.log(item);
                         const canAttend = user?.profile === 'master' || user?.user_id === item.professional_id;
                         return (
                             <tr key={item.appointment_id}>

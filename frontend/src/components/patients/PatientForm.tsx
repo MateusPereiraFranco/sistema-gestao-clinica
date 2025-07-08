@@ -5,8 +5,9 @@ import { maskCPF, maskPhone, maskCEP, maskCNS } from "@/utils/masks";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
+import { useAuthStore } from "@/stores/useAuthStore";
 import toast from "react-hot-toast";
-import { Patient } from "@/types";
+import { Patient, Unit } from "@/types";
 
 interface PatientFormProps {
     patient?: Patient;
@@ -14,6 +15,8 @@ interface PatientFormProps {
 
 export default function PatientForm({ patient }: { patient?: Patient }) {
     const router = useRouter();
+    const { user } = useAuthStore();
+    const [units, setUnits] = useState<Unit[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isCepLoading, setIsCepLoading] = useState(false);
     
@@ -34,6 +37,7 @@ export default function PatientForm({ patient }: { patient?: Patient }) {
         vinculo: patient?.vinculo || 'nenhum',
         father_name: patient?.father_name || '',
         cns: patient?.cns || '',
+        unit_id: patient?.unit_id || user?.unit_id || '',
     });
     
     const [isWithoutNumber, setIsWithoutNumber] = useState(patient?.number === 'S/N');
@@ -60,6 +64,14 @@ export default function PatientForm({ patient }: { patient?: Patient }) {
         } catch (error) { toast.error("Erro ao buscar CEP."); }
         finally { setIsCepLoading(false); }
     }, []);
+
+    const canChangeUnit = user?.profile === 'admin' || user?.profile === 'master';
+
+    useEffect(() => {
+        if (canChangeUnit) {
+            api.get('/units').then(res => setUnits(res.data));
+        }
+    }, [canChangeUnit]);
 
     useEffect(() => {
         if(formData.cep?.length === 9) handleCepLookup(formData.cep);
@@ -96,6 +108,17 @@ export default function PatientForm({ patient }: { patient?: Patient }) {
         <form onSubmit={handleSubmit} className="space-y-12">
             <div>
                 <h2 className="text-xl font-semibold text-gray-900">Identificação</h2>
+                {isEditing && canChangeUnit && (
+                         <div className="sm:col-span-full">
+                            <label htmlFor="unit_id" className="block text-sm font-medium leading-6 text-gray-900">Unidade do Paciente</label>
+                            <select id="unit_id" name="unit_id" value={formData.unit_id || ''} onChange={handleChange}
+                                className="mt-2 block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600">
+                                {units.map(unit => (
+                                    <option key={unit.unit_id} value={unit.unit_id}>{unit.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                     <div className="sm:col-span-3">
                         <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Nome Completo</label>

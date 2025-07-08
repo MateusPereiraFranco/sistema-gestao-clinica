@@ -8,6 +8,7 @@ const userRoutes = require('./api/users/usersRoutes');
 const appointmentRoutes = require('./api/appointments/appointmentsRoutes');
 const specialtyRoutes = require('./api/specialties/specialtiesRoutes'); // <-- Importar
 const reportsRoutes = require('./api/reports/reportsRoutes');
+const unitsRoutes = require('./api/units/unitsRoutes'); // <-- Importar unidades
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/specialties', specialtyRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/units', unitsRoutes)
 
 app.use(errorHandler);
 

@@ -3,7 +3,8 @@ const { hashPassword } = require('../../utils/passwordUtil');
 
 exports.findWithFilters = async (filters) => {
     let baseQuery = `
-        SELECT patient_id, name, cpf, mother_name, to_char(birth_date, 'DD/MM/YYYY') as birth_date_formatted
+        SELECT patient_id, name, cpf, mother_name, to_char(birth_date, 'DD/MM/YYYY') as birth_date_formatted,unit_id,
+               cell_phone_1, cell_phone_2, cns, cep, street, "number", neighborhood, city, state, vinculo, unit_id
         FROM patients
     `;
     const conditions = [];
@@ -52,28 +53,28 @@ exports.create = async (patientData) => {
     const {
         name, mother_name, father_name, cpf, cns, birth_date,
         cell_phone_1, cell_phone_2, cep, street, number, neighborhood,
-        city, state, observations, vinculo, registered_by
+        city, state, observations, vinculo, registered_by, unit_id
     } = patientData;
 
     const query = `
         INSERT INTO patients (
             name, mother_name, father_name, cpf, cns, birth_date, cell_phone_1, 
             cell_phone_2, cep, street, "number", neighborhood, city, state, 
-            observations, vinculo, registered_by
+            observations, vinculo, registered_by, unit_id
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
         RETURNING *;
     `;
     const params = [
         name, mother_name, father_name, cpf, cns, birth_date, cell_phone_1,
         cell_phone_2, cep, street, number, neighborhood, city, state,
-        observations, vinculo, registered_by
+        observations, vinculo, registered_by, unit_id
     ];
     const { rows } = await db.query(query, params);
     return rows[0];
 };
 
-exports.update = async (id, patientData) => {
+exports.update = async (id, patientData, unit_id) => {
     const {
         name, mother_name, father_name, cpf, cns, birth_date,
         cell_phone_1, cell_phone_2, cep, street, number, neighborhood,
@@ -86,14 +87,14 @@ exports.update = async (id, patientData) => {
             name = $1, mother_name = $2, father_name = $3, cpf = $4, cns = $5, 
             birth_date = $6, cell_phone_1 = $7, cell_phone_2 = $8, cep = $9, 
             street = $10, "number" = $11, neighborhood = $12, city = $13, 
-            state = $14, observations = $15, vinculo = $16, updated_at = NOW()
-        WHERE patient_id = $17
+            state = $14, observations = $15, vinculo = $16, unit_id = $17, updated_at = NOW()
+        WHERE patient_id = $18
         RETURNING *;
     `;
     const params = [
         name, mother_name, father_name, cpf, cns, birth_date,
         cell_phone_1, cell_phone_2, cep, street, number, neighborhood,
-        city, state, observations, vinculo,
+        city, state, observations, vinculo, unit_id,
         id
     ];
     const { rows } = await db.query(query, params);
@@ -139,7 +140,7 @@ exports.findByIdForEdit = async (id) => {
             patient_id, name, cpf, mother_name, father_name, cns,
             to_char(birth_date, 'YYYY-MM-DD') as birth_date,
             cell_phone_1, cell_phone_2, cep, street, "number",
-            neighborhood, city, state, observations, vinculo
+            neighborhood, city, state, observations, vinculo, unit_id
         FROM patients 
         WHERE patient_id = $1;
     `;

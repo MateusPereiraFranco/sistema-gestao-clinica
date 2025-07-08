@@ -12,12 +12,12 @@ router.route('/')
     // Qualquer utilizador autenticado pode listar os profissionais para a agenda.
     .get(protect, userController.getAllUsers)
     // Apenas um master pode criar um novo utilizador.
-    .post(protect, restrictTo('master'), userController.createUser);
+    .post(protect, restrictTo('admin', 'master'), userController.createUser);
 
 router.route('/:id')
     // Apenas um master pode ver, atualizar ou apagar os detalhes de um utilizador.
-    .get(protect, checkUnitAccess('patients'), restrictTo('master'), userController.getUserById)
-    .put(protect, checkUnitAccess('patients'), restrictTo('master'), userController.updateUser)
-    .delete(protect, checkUnitAccess('patients'), restrictTo('master'), userController.deleteUser);
+    .get(protect, checkUnitAccess('patients'), restrictTo('admin', 'master'), userController.getUserById)
+    .put(protect, checkUnitAccess('patients'), restrictTo('admin', 'master'), userController.updateUser)
+    .delete(protect, checkUnitAccess('patients'), restrictTo('admin', 'master'), userController.deleteUser);
 
 module.exports = router;

@@ -15,7 +15,7 @@ exports.getAllPatients = async (req, res, next) => {
 exports.getPatientForEdit = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const patientData = await patientService.getPatientForEdit(id);
+        const patientData = await patientService.getPatientForEdit(id, req.user);
         res.status(200).json(patientData);
     } catch (error) {
         next(error);
@@ -25,7 +25,7 @@ exports.getPatientForEdit = async (req, res, next) => {
 // ... (outras funções do controller permanecem as mesmas) ...
 exports.createPatient = async (req, res, next) => {
     try {
-        const newPatient = await patientService.createPatient(req.body, req.user.user_id);
+        const newPatient = await patientService.createPatient(req.body, req.user.user_id, req.user.unit_id);
         res.status(201).json(newPatient);
     } catch (error) {
         next(error);
@@ -42,7 +42,7 @@ exports.getPatientById = async (req, res, next) => {
 };
 exports.updatePatient = async (req, res, next) => {
     try {
-        const updatedPatient = await patientService.updatePatient(req.params.id, req.body);
+        const updatedPatient = await patientService.updatePatient(req.params.id, req.body, req.user);
         res.status(200).json(updatedPatient);
     } catch (error) {
         next(error);

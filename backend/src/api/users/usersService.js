@@ -11,6 +11,8 @@ exports.createUser = async (userData, requestingUser) => {
     // Se o criador for 'master', força o novo utilizador a pertencer à mesma unidade.
     if (requestingUser.profile === 'master') {
         userData.unit_id = requestingUser.unit_id;
+    } else if (requestingUser.profile === 'admin' && !userData.unit_id) {
+        throw new Error('A unidade é obrigatória para a criação de um novo utilizador.');
     }
     return userModel.create(userData);
 };
@@ -34,13 +36,24 @@ exports.getUserById = async (id) => {
     return user;
 };
 
-exports.updateUser = async (id, userData) => {
+exports.updateUser = async (id, userData, requestingUser) => {
     const userToUpdate = await userModel.findById(id);
     if (!userToUpdate) {
         const error = new Error('Utilizador a ser atualizado não encontrado.');
         error.statusCode = 404;
         throw error;
     }
+
+    if (requestingUser.profile === 'master') {
+        if (!requestingUser.unit_id) {
+            throw new Error('O gestor não está associado a nenhuma unidade.');
+        }
+        userData.unit_id = requestingUser.unit_id;
+    } else if (requestingUser.profile === 'admin' && !userData.unit_id) {
+        // REGRA DE NEGÓCIO: Se o criador for 'admin', a unidade é obrigatória.
+        throw new Error('A unidade é obrigatória para a criação de um novo utilizador.');
+    }
+
     return userModel.update(id, userData);
 };
 exports.deleteUser = async (id) => {

@@ -18,6 +18,6 @@ router.get('/:id/for-edit', checkUnitAccess('patients'), patientController.getPa
 router.route('/:id')
     .get(checkUnitAccess('patients'), patientController.getPatientById)
     .put(checkUnitAccess('patients'), patientController.updatePatient)
-    .delete(checkUnitAccess('patients'), restrictTo('master'), patientController.deletePatient);
+    .delete(checkUnitAccess('patients'), restrictTo('admin', 'master'), patientController.deletePatient);
 
 module.exports = router;

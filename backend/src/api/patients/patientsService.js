@@ -8,14 +8,14 @@ exports.getAllPatients = (filters, user) => {
     return patientModel.findWithFilters(filters);
 };
 
-exports.getPatientForEdit = async (id) => {
+exports.getPatientForEdit = async (id, user) => {
     const patient = await patientModel.findByIdForEdit(id);
     if (!patient) {
         const error = new Error('Paciente não encontrado.');
         error.statusCode = 404;
         throw error;
     }
-    if (user.profile === 'master' || user.profile === 'normal' && patient.unit_id !== user.unit_id) {
+    if (user.profile !== 'admin' && patient.unit_id !== user.unit_id) {
         const error = new Error('Acesso negado a este paciente.');
         error.statusCode = 403;
         throw error;
@@ -24,7 +24,7 @@ exports.getPatientForEdit = async (id) => {
 };
 
 // A validação foi atualizada para não exigir o campo 'observations'
-exports.createPatient = async (patientData, userId) => {
+exports.createPatient = async (patientData, userId, user_unit_id) => {
     const requiredFields = [
         'name', 'birth_date', 'mother_name', 'cell_phone_1',
         'cep', 'street', 'number', 'neighborhood', 'city', 'state',
@@ -43,28 +43,40 @@ exports.createPatient = async (patientData, userId) => {
         if (!isValidCPF(patientData.cpf)) {
             throw new Error('O CPF fornecido é inválido.');
         }
-        const existingPatient = await patientModel.findByCpf(patientData.cpf);
-        if (existingPatient) {
+        const existingPatientCPF = await patientModel.findByCpf(patientData.cpf);
+        if (existingPatientCPF) {
             const error = new Error('O CPF fornecido já está registado noutro paciente.');
             error.statusCode = 409;
             throw error;
         }
     }
-    if (patientData.cns && !isValidCNS(patientData.cns)) {
-        throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
+    if (patientData.cns) {
+        if (!isValidCNS(patientData.cns)) {
+            throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
+        }
+        const existingPatientCNS = await patientModel.findByCns(patientData.cns);
+        if (existingPatientCNS) {
+            const error = new Error('O Cartão do SUS (CNS) fornecido já está registado noutro paciente.');
+            error.statusCode = 409;
+            throw error;
+        }
     }
 
-    const fullPatientData = { ...patientData, registered_by: userId, unit_id: user.unit_id };
+    const fullPatientData = { ...patientData, registered_by: userId, unit_id: user_unit_id };
     return patientModel.create(fullPatientData);
 };
 
 
-exports.updatePatient = async (id, patientData) => {
+exports.updatePatient = async (id, patientData, user) => {
     const patientToUpdate = await patientModel.findById(id);
     if (!patientToUpdate) {
         const error = new Error('Paciente a ser atualizado não encontrado.');
         error.statusCode = 404;
         throw error;
+    }
+
+    if (user.profile !== 'admin' && user.profile !== 'master') {
+        throw new Error("Você não tem permissão para atualizar este paciente.");
     }
 
     if (patientData.cpf) {
@@ -78,10 +90,18 @@ exports.updatePatient = async (id, patientData) => {
             throw error;
         }
     }
-    if (patientData.cns && !isValidCNS(patientData.cns)) {
-        throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
+    if (patientData.cns) {
+        if (!isValidCNS(patientData.cns)) {
+            throw new Error('O Cartão do SUS (CNS) fornecido é inválido.');
+        }
+        const existingPatientCNS = await patientModel.findByCns(patientData.cns);
+        if (existingPatientCNS && existingPatientCNS.patient_id !== id) {
+            const error = new Error('O Cartão do SUS (CNS) fornecido já está registado noutro paciente.');
+            error.statusCode = 409;
+            throw error;
+        }
     }
-    return patientModel.update(id, patientData);
+    return patientModel.update(id, patientData, user.unit_id);
 };
 
 exports.getPatientDetails = async (id) => {
