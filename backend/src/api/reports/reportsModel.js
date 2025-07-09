@@ -27,9 +27,8 @@ exports.getGroupedServicesSummary = async (filters) => {
     let paramIndex = 3;
 
     const whereConditions = ["u.profile = 'normal'", "u.is_active = TRUE"];
-
     if (professionalId && professionalId !== 'all') {
-        query += ` AND u.user_id = $${paramIndex++}`;
+        whereConditions.push(`u.user_id = $${paramIndex++}`);
         params.push(professionalId);
     }
 

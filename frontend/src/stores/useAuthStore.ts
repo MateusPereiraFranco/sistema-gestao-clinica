@@ -6,7 +6,8 @@ interface User {
   name: string;
   email: string;
   profile: 'admin' | 'master' | 'normal';
-  unit_id: string | null;
+  unit_id: string;
+  unit_name?: string;
 }
 
 interface AuthState {

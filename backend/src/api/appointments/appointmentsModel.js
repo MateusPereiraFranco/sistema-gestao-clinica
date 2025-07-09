@@ -23,7 +23,7 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
 };
 
 exports.findAppointments = async (filters) => {
-    const { professionalId, date, statusArray, period } = filters;
+    const { professionalId, date, statusArray, period, unit_id } = filters;
     let query = `
         SELECT
             apt.appointment_id, apt.professional_id, apt.appointment_datetime,
@@ -53,6 +53,10 @@ exports.findAppointments = async (filters) => {
     if (statusArray && statusArray.length > 0) {
         query += ` AND apt.status = ANY($${paramIndex++}::appointment_status[])`;
         params.push(statusArray);
+    }
+    if (unit_id && unit_id !== 'all') {
+        query += ` AND apt.unit_id = $${paramIndex++}`;
+        params.push(unit_id);
     }
     if (period === 'manha') {
         query += ` AND to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24MI') < '1200'`;

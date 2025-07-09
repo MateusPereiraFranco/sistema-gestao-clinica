@@ -16,8 +16,8 @@ router.route('/')
 
 router.route('/:id')
     // Apenas um master pode ver, atualizar ou apagar os detalhes de um utilizador.
-    .get(protect, checkUnitAccess('patients'), restrictTo('admin', 'master'), userController.getUserById)
-    .put(protect, checkUnitAccess('patients'), restrictTo('admin', 'master'), userController.updateUser)
-    .delete(protect, checkUnitAccess('patients'), restrictTo('admin', 'master'), userController.deleteUser);
+    .get(protect, restrictTo('admin', 'master'), userController.getUserById)
+    .put(protect, restrictTo('admin', 'master'), userController.updateUser)
+    .delete(protect, restrictTo('admin', 'master'), userController.deleteUser);
 
 module.exports = router;

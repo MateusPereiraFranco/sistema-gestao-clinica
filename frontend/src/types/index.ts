@@ -59,6 +59,7 @@ export interface User {
     profile: 'admin | master' | 'normal';
     specialty_name?: string;
     unit_id: string | null;
+    unit_name?: string;
 }
 
 export interface ServiceDetails {

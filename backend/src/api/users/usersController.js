@@ -11,7 +11,10 @@ exports.createUser = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const users = await userService.getAllUsers(req.user);
+        // Extrai os novos filtros da query e passa-os para o serviço.
+        const { name, specialtyId } = req.query;
+        const filters = { name, specialtyId };
+        const users = await userService.getAllUsers(filters, req.user);
         res.status(200).json(users);
     } catch (error) {
         next(error);

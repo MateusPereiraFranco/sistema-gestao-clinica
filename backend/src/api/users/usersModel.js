@@ -27,7 +27,8 @@ exports.findAllActive = async () => {
 };
 
 // Modificado para incluir o nome da especialidade através de um JOIN
-exports.findAll = async (unitId) => {
+exports.findAll = async (filters = {}) => {
+    const { unitId, name, specialtyId } = filters;
     let query = `
         SELECT u.user_id, u.name, u.email, u.profile, s.name as specialty_name, un.name as unit_name
         FROM users u
@@ -36,10 +37,21 @@ exports.findAll = async (unitId) => {
         WHERE u.is_active = TRUE
     `;
     const params = [];
+    let paramIndex = 1;
+
     if (unitId) {
-        query += ' AND u.unit_id = $1';
+        query += ` AND u.unit_id = $${paramIndex++}`;
         params.push(unitId);
     }
+    if (name) {
+        query += ` AND unaccent(u.name) ILIKE unaccent($${paramIndex++})`;
+        params.push(`%${name}%`);
+    }
+    if (specialtyId && specialtyId !== 'all') {
+        query += ` AND u.specialty_id = $${paramIndex++}`;
+        params.push(specialtyId);
+    }
+
     query += ' ORDER BY u.name;';
 
     const { rows } = await db.query(query, params);
@@ -48,7 +60,17 @@ exports.findAll = async (unitId) => {
 
 // ... (outras funções do modelo permanecem maioritariamente as mesmas) ...
 exports.findByEmail = async (email) => {
-    const query = 'SELECT * FROM users WHERE email = $1 AND is_active = TRUE;';
+    const query = `
+        SELECT 
+            u.*, 
+            un.name as unit_name 
+        FROM 
+            users u 
+        LEFT JOIN 
+            units un ON u.unit_id = un.unit_id
+        WHERE 
+            u.email = $1 AND u.is_active = TRUE;
+    `;
     const { rows } = await db.query(query, [email]);
     return rows[0];
 };

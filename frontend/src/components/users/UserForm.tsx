@@ -99,9 +99,23 @@ export default function UserForm() {
                     </div>
                      <div className="sm:col-span-2">
                         <label htmlFor="unit_id" className="block text-sm font-medium leading-6 text-gray-900">Unidade</label>
-                        <select id="unit_id" name="unit_id" value={formData.unit_id} onChange={handleChange} disabled={user?.profile === 'master'} className="mt-2 block w-full rounded-md border-0 py-2.5 shadow-sm ring-1 ring-inset ring-gray-300 disabled:bg-gray-100">
-                           {units.map(unit => <option key={unit.unit_id} value={unit.unit_id}>{unit.name}</option>)}
-                           {user?.profile === 'master' && <option value={user.unit_id}>{user.unit_name || 'Minha Unidade'}</option>}
+                        <select 
+                            id="unit_id" 
+                            name="unit_id" 
+                            value={formData.unit_id} 
+                            onChange={handleChange} 
+                            // O seletor é desativado se o utilizador for 'master', pois ele só pode criar na sua própria unidade.
+                            disabled={user?.profile === 'master'} 
+                            className="mt-2 block w-full rounded-md border-0 py-2.5 shadow-sm ring-1 ring-inset ring-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        >
+                           {/* Se for admin, mostra a lista de unidades. */}
+                           {user?.profile === 'admin' && units.map(unit => 
+                                <option key={unit.unit_id} value={unit.unit_id}>{unit.name}</option>
+                           )}
+                           {/* Se for master, mostra apenas a sua própria unidade. */}
+                           {user?.profile === 'master' && 
+                                <option value={user.unit_id}>{user.unit_name || 'Minha Unidade'}</option>
+                           }
                         </select>
                     </div>
                 </div>

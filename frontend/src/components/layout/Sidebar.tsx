@@ -14,8 +14,8 @@ const navItems = [
 ];
 
 const adminNavItems = [
-    { href: '/dashboard/usuarios/novo', label: 'Gerir Utilizadores', icon: UserPlus },
-]
+    { href: '/dashboard/usuarios', label: 'Gerir Utilizadores', icon: UserPlus },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();

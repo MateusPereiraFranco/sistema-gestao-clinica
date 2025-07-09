@@ -18,11 +18,11 @@ exports.createUser = async (userData, requestingUser) => {
 };
 
 // ... (outras funções do serviço permanecem as mesmas) ...
-exports.getAllUsers = async (requestingUser) => {
-    if (requestingUser.profile === 'admin') {
-        return userModel.findAll();
+exports.getAllUsers = async (filters, requestingUser) => {
+    if (requestingUser.profile === 'master' || requestingUser.profile === 'normal') {
+        filters.unitId = requestingUser.unit_id;
     }
-    return userModel.findAll(requestingUser.unit_id);
+    return userModel.findAll(filters);
 };
 
 exports.getUserById = async (id) => {

@@ -10,13 +10,14 @@ interface ReportFiltersProps {
     isLoading: boolean;
 }
 
+
 export default function ReportFilters({ professionals, onSearch, isLoading }: ReportFiltersProps) {
+    
     const {
         reportProfessional, setReportProfessional,
         reportStartDate, setReportStartDate,
         reportEndDate, setReportEndDate
     } = useFilterStore();
-
     return (
         <div className="p-6 bg-white rounded-lg shadow-sm mb-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
