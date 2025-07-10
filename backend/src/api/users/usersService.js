@@ -36,26 +36,36 @@ exports.getUserById = async (id) => {
     return user;
 };
 
+exports.getUserForEdit = async (userIdToEdit, requestingUser) => {
+    const userToEdit = await userModel.findByIdForEdit(userIdToEdit);
+    if (!userToEdit) {
+        throw new Error('Utilizador não encontrado.');
+    }
+    // Se o requerente for 'master', ele só pode editar utilizadores da sua própria unidade.
+    if (requestingUser.profile === 'master' && userToEdit.unit_id !== requestingUser.unit_id) {
+        throw new Error('Acesso negado. Não pode editar utilizadores de outra unidade.');
+    }
+    return userToEdit;
+};
+
 exports.updateUser = async (id, userData, requestingUser) => {
     const userToUpdate = await userModel.findById(id);
     if (!userToUpdate) {
-        const error = new Error('Utilizador a ser atualizado não encontrado.');
-        error.statusCode = 404;
-        throw error;
+        throw new Error('Utilizador a ser atualizado não encontrado.');
     }
 
+    // REGRA DE NEGÓCIO: Um 'master' não pode transferir um utilizador para outra unidade.
     if (requestingUser.profile === 'master') {
-        if (!requestingUser.unit_id) {
-            throw new Error('O gestor não está associado a nenhuma unidade.');
+        if (userData.unit_id && userData.unit_id !== userToUpdate.unit_id) {
+            throw new Error("Gestores de unidade não podem transferir utilizadores.");
         }
-        userData.unit_id = requestingUser.unit_id;
-    } else if (requestingUser.profile === 'admin' && !userData.unit_id) {
-        // REGRA DE NEGÓCIO: Se o criador for 'admin', a unidade é obrigatória.
-        throw new Error('A unidade é obrigatória para a criação de um novo utilizador.');
+        // Garante que o master não altere a unidade acidentalmente.
+        userData.unit_id = userToUpdate.unit_id;
     }
 
     return userModel.update(id, userData);
 };
+
 exports.deleteUser = async (id) => {
     const deletedCount = await userModel.remove(id);
     if (deletedCount === 0) {

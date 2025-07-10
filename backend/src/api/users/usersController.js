@@ -12,8 +12,8 @@ exports.createUser = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
     try {
         // Extrai os novos filtros da query e passa-os para o serviço.
-        const { name, specialtyId } = req.query;
-        const filters = { name, specialtyId };
+        const { name, specialtyId, profile } = req.query;
+        const filters = { name, specialtyId, profile };
         const users = await userService.getAllUsers(filters, req.user);
         res.status(200).json(users);
     } catch (error) {
@@ -24,6 +24,15 @@ exports.getAllUsers = async (req, res, next) => {
 exports.getUserById = async (req, res, next) => {
     try {
         const user = await userService.getUserById(req.params.id, req.user);
+        res.status(200).json(user);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getUserForEdit = async (req, res, next) => {
+    try {
+        const user = await userService.getUserForEdit(req.params.id, req.user);
         res.status(200).json(user);
     } catch (error) {
         next(error);

@@ -50,6 +50,9 @@ export interface Appointment {
     patient_mother_name: string;
     date_formatted: string;
     patient_birth_date: string;
+    request_date?: string;
+    created_by_name?: string;
+    formatted_date?: string;
 }
 
 export interface User {
@@ -60,6 +63,8 @@ export interface User {
     specialty_name?: string;
     unit_id: string | null;
     unit_name?: string;
+    is_active: boolean;
+    specialty_id?: string | null;
 }
 
 export interface ServiceDetails {
@@ -71,6 +76,7 @@ export interface ServiceDetails {
     appointment_id: string;
     professional_id: string;
     appointment_datetime: string;
+    patient_id: string;
 }
 
 export interface CompletedServiceDetails extends ServiceDetails {

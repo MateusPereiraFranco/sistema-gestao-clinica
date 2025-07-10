@@ -28,7 +28,7 @@ exports.findAllActive = async () => {
 
 // Modificado para incluir o nome da especialidade através de um JOIN
 exports.findAll = async (filters = {}) => {
-    const { unitId, name, specialtyId } = filters;
+    const { profile, unitId, name, specialtyId } = filters;
     let query = `
         SELECT u.user_id, u.name, u.email, u.profile, s.name as specialty_name, un.name as unit_name
         FROM users u
@@ -50,6 +50,10 @@ exports.findAll = async (filters = {}) => {
     if (specialtyId && specialtyId !== 'all') {
         query += ` AND u.specialty_id = $${paramIndex++}`;
         params.push(specialtyId);
+    }
+    if (profile && profile !== 'all') {
+        query += ` AND u.profile = $${paramIndex++}`;
+        params.push(profile);
     }
 
     query += ' ORDER BY u.name;';
@@ -79,6 +83,18 @@ exports.findById = async (id) => {
     const { rows } = await db.query(query, [id]);
     return rows[0];
 };
+
+exports.findByIdForEdit = async (id) => {
+    const query = `
+        SELECT 
+            user_id, name, email, profile, unit_id, specialty_id, is_active 
+        FROM users 
+        WHERE user_id = $1;
+    `;
+    const { rows } = await db.query(query, [id]);
+    return rows[0];
+};
+
 exports.findByProfile = async (profile) => {
     const query = `
         SELECT u.user_id, u.name, s.name as specialty_name
@@ -90,14 +106,16 @@ exports.findByProfile = async (profile) => {
     const { rows } = await db.query(query, [profile]);
     return rows;
 };
-exports.update = async (id, { name, email, profile, specialty_id, is_active }) => {
+exports.update = async (id, { name, email, profile, specialty_id, is_active, unit_id }) => {
     const query = `
         UPDATE users
-        SET name = $1, email = $2, profile = $3, specialty_id = $4, is_active = $5, updated_at = NOW()
-        WHERE user_id = $6
-        RETURNING user_id, name, email, profile, specialty_id, is_active;
+        SET 
+            name = $1, email = $2, profile = $3, specialty_id = $4, 
+            is_active = $5, unit_id = $6, updated_at = NOW()
+        WHERE user_id = $7
+        RETURNING user_id, name, email, profile, specialty_id, is_active, unit_id;
     `;
-    const params = [name, email, profile, specialty_id, is_active, id];
+    const params = [name, email, profile, specialty_id, is_active, unit_id, id];
     const { rows } = await db.query(query, params);
     return rows[0];
 };

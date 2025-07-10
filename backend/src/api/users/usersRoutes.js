@@ -12,7 +12,9 @@ router.route('/')
     // Qualquer utilizador autenticado pode listar os profissionais para a agenda.
     .get(protect, userController.getAllUsers)
     // Apenas um master pode criar um novo utilizador.
-    .post(protect, restrictTo('admin', 'master'), userController.createUser);
+    .post(protect, restrictTo('master'), userController.createUser);
+
+router.get('/:id/for-edit', protect, userController.getUserForEdit);
 
 router.route('/:id')
     // Apenas um master pode ver, atualizar ou apagar os detalhes de um utilizador.

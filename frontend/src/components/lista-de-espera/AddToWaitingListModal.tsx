@@ -1,7 +1,7 @@
 'use client';
 
 import api from '@/services/api';
-import { Patient, User } from '@/types';
+import { Patient, User, Appointment } from '@/types';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -29,22 +29,48 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
     }, [patient]);
 
     const handleConfirm = async () => {
-        if (!selectedProfessional) {
-            toast.error("Selecione um profissional.");
+        if (!selectedProfessional || !patient) {
+            toast.error("Selecione um paciente e um profissional.");
             return;
         }
+
         setIsLoading(true);
+        const toastId = toast.loading("A verificar lista de espera...");
+
         try {
+            // Passo 1: Verificar se já existe uma entrada.
+            const checkResponse = await api.get('/appointments/check-waiting-list', {
+                params: {
+                    patientId: patient.patient_id,
+                    professionalId: selectedProfessional,
+                }
+            });
+
+            const existingEntry: Appointment | null = checkResponse.data;
+
+            // Passo 2: Se existir, mostrar o alerta e parar.
+            if (existingEntry) {
+                toast.error(
+                    `Este paciente já está na lista de espera para este médico desde ${existingEntry.request_date}, adicionado por ${existingEntry.created_by_name || 'desconhecido'}.`,
+                    { id: toastId, duration: 6000 }
+                );
+                setIsLoading(false);
+                return;
+            }
+
+            // Passo 3: Se não existir, criar a nova entrada.
+            toast.loading("A adicionar à lista...", { id: toastId });
             await api.post('/appointments/waiting-list', {
-                patient_id: patient?.patient_id,
+                patient_id: patient.patient_id,
                 professional_id: selectedProfessional,
                 request_date: requestDate,
             });
-            toast.success(`${patient?.name} adicionado à lista de espera.`);
+            toast.success(`${patient.name} adicionado à lista de espera.`, { id: toastId });
             onPatientAdded();
             onClose();
+
         } catch (error: any) {
-            toast.error(error.response?.data?.error || "Falha ao adicionar à lista.");
+            toast.error(error.response?.data?.error || "Falha ao adicionar à lista.", { id: toastId });
         } finally {
             setIsLoading(false);
         }
@@ -78,7 +104,7 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                 <div className="flex justify-end gap-4 mt-6 pt-4 border-t">
                     <button onClick={onClose} className="py-2 px-4 rounded-md bg-gray-100 font-semibold">Cancelar</button>
                     <button onClick={handleConfirm} disabled={isLoading} className="py-2 px-4 rounded-md bg-indigo-600 text-white font-semibold disabled:bg-indigo-300">
-                        {isLoading ? 'A adicionar...' : 'Adicionar à Lista'}
+                        {isLoading ? 'A verificar...' : 'Adicionar à Lista'}
                     </button>
                 </div>
             </div>

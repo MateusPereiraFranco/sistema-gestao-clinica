@@ -3,6 +3,7 @@
 import { User } from '@/types';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
+import Link from 'next/link';
 
 interface UserTableProps {
     users: User[];
@@ -15,7 +16,6 @@ export default function UserTable({ users, isLoading, onDelete }: UserTableProps
 
     if (isLoading) return <p className="text-center p-8">A carregar utilizadores...</p>;
     if (users.length === 0) return <p className="text-center p-8 bg-gray-50 rounded-md">Nenhum utilizador encontrado.</p>;
-
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
@@ -37,7 +37,9 @@ export default function UserTable({ users, isLoading, onDelete }: UserTableProps
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.specialty_name || 'N/A'}</td>
                             {loggedInUser?.profile === 'admin' && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.unit_name || 'N/A'}</td>}
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button className="text-blue-600 hover:text-blue-900" title="Editar Utilizador"><Pencil className="w-5 h-5"/></button>
+                                <Link href={`/dashboard/usuarios/${user.user_id}/editar`} className="inline-flex items-center text-blue-600 hover:text-blue-900">
+                                    <Pencil className="w-5 h-5"/>
+                                </Link>
                                 <button onClick={() => onDelete(user.user_id)} className="text-red-600 hover:text-red-900" title="Apagar Utilizador"><Trash2 className="w-5 h-5"/></button>
                             </td>
                         </tr>

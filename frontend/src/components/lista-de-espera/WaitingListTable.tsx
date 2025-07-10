@@ -20,8 +20,7 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
     const handleAttend = async (appointment: Appointment) => {
         const toastId = toast.loading("A iniciar atendimento...");
         try {
-            await api.patch(`/appointments/${appointment.appointment_id}/check-in`);
-            await api.patch(`/appointments/${appointment.appointment_id}/start-service`);
+            await api.patch(`/appointments/${appointment.appointment_id}/attend-from-waitlist`);
             toast.success("Atendimento iniciado!", { id: toastId });
             router.push(`/dashboard/atendimento/${appointment.appointment_id}`);
         } catch (error: any) {

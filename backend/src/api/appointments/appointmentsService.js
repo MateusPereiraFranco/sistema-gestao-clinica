@@ -71,7 +71,7 @@ exports.createAppointment = async (appointmentData) => {
     return appointmentModel.create(fullAppointmentData);
 };
 
-exports.addToWaitingList = async (data) => {
+exports.addToWaitingList = async (data, loggedInUserId) => {
     const { patient_id, professional_id, request_date } = data;
     if (!patient_id || !professional_id || !request_date) {
         throw new Error("Dados insuficientes para adicionar à lista de espera.");
@@ -94,7 +94,8 @@ exports.addToWaitingList = async (data) => {
         appointment_datetime,
         service_type: specialtyName,
         observations: 'Adicionado à lista de espera.',
-        status: 'on_waiting_list' // O novo status!
+        status: 'on_waiting_list',
+        created_by: loggedInUserId
     };
 
     return appointmentModel.create(appointmentData);
@@ -135,7 +136,7 @@ exports.startService = async (appointmentId, loggedInUserId) => {
 
     if (appointment.professional_id !== loggedInUserId) {
         const loggedInUser = await userModel.findById(loggedInUserId);
-        if (loggedInUser.profile !== 'master') {
+        if (loggedInUser.profile !== 'admin') {
             const error = new Error('Você não tem permissão para atender este paciente.');
             error.statusCode = 403; // 403 Forbidden
             throw error;
@@ -158,6 +159,11 @@ exports.startService = async (appointmentId, loggedInUserId) => {
     // Se o status for 'waiting', atualiza para 'in_progress'.
     return appointmentModel.updateStatus(appointmentId, 'in_progress');
 };
+
+exports.checkFutureSchedule = async (patientId) => {
+    return appointmentModel.findFutureScheduledAppointment(patientId);
+};
+
 
 exports.getServiceDetails = async (appointmentId) => {
     const details = await appointmentModel.findDetailsForService(appointmentId);
@@ -201,7 +207,8 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
                         appointment_datetime: new Date(),
                         service_type: specialtyName,
                         observations: `Encaminhado por Dr(a). ${loggedInUser.name} em ${new Date().toLocaleDateString('pt-BR')}`,
-                        status: 'on_waiting_list'
+                        status: 'on_waiting_list',
+                        created_by: loggedInUserId
                     });
                 }
             }

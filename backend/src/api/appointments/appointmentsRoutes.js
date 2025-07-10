@@ -16,6 +16,7 @@ router.post('/on-demand', appointmentController.createOnDemandService);
 router.post('/waiting-list', appointmentController.addToWaitingList);
 
 router.get('/check-waiting-list', appointmentController.checkWaitingList);
+router.get('/check-future-schedule', appointmentController.checkFutureSchedule);
 router.patch('/:id/schedule-from-waitlist', appointmentController.scheduleFromWaitlist);
 router.patch('/:id/attend-from-waitlist', appointmentController.attendFromWaitlist);
 

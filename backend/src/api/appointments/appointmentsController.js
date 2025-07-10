@@ -2,13 +2,19 @@ const appointmentService = require('./appointmentsService');
 
 exports.getAppointments = async (req, res, next) => {
     try {
-        const { professionalId, date, status, period } = req.query;
+        // CORREÇÃO: A lógica agora lida explicitamente com o formato 'status[]'
+        // enviado pelo frontend com arrays.
+        const { professionalId, date, period } = req.query;
+        const status = req.query['status[]'] || req.query.status;
+
         const filters = {
             professionalId,
             date,
+            // Garante que o status seja sempre um array, mesmo que venha como string única.
             statusArray: Array.isArray(status) ? status : (status ? [status] : []),
             period
         };
+
         const appointments = await appointmentService.getAppointments(filters, req.user);
         res.status(200).json(appointments);
     } catch (error) {
@@ -27,7 +33,7 @@ exports.createAppointment = async (req, res, next) => {
 
 exports.addToWaitingList = async (req, res, next) => {
     try {
-        const newEntry = await appointmentService.addToWaitingList(req.body);
+        const newEntry = await appointmentService.addToWaitingList(req.body, req.user.user_id);
         res.status(201).json(newEntry);
     } catch (error) {
         next(error);
@@ -85,6 +91,16 @@ exports.getServiceDetails = async (req, res, next) => {
     try {
         const details = await appointmentService.getServiceDetails(req.params.id);
         res.status(200).json(details);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.checkFutureSchedule = async (req, res, next) => {
+    try {
+        const { patientId } = req.query;
+        const entry = await appointmentService.checkFutureSchedule(patientId);
+        res.status(200).json(entry || null);
     } catch (error) {
         next(error);
     }

@@ -40,7 +40,7 @@ export default function AtendimentoPage() {
             <Header title="Ficha de Atendimento" />
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 {details && <PatientHeader details={details} />}
-                {details && <EvolutionForm appointmentId={details.appointment_id} />}
+                {details && <EvolutionForm appointmentId={details.appointment_id} patientId={details.patient_id} />}
             </main>
         </>
     );

@@ -69,7 +69,6 @@ exports.findAppointments = async (filters) => {
     return rows;
 };
 
-// NOVA FUNÇÃO: Insere múltiplos encaminhamentos de uma vez.
 exports.createReferrals = async (fromAppointmentId, professionalIds) => {
     if (!professionalIds || professionalIds.length === 0) return;
 
@@ -88,9 +87,29 @@ exports.createReferrals = async (fromAppointmentId, professionalIds) => {
     await db.query(query, params);
 };
 
+exports.findFutureScheduledAppointment = async (patientId) => {
+    const query = `
+        SELECT 
+            appointment_id, 
+            appointment_datetime,
+            to_char(appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as formatted_date
+        FROM appointments 
+        WHERE 
+            patient_id = $1 
+            AND status = 'scheduled' 
+            AND appointment_datetime >= NOW()
+        ORDER BY 
+            appointment_datetime ASC
+        LIMIT 1;
+    `;
+    const { rows } = await db.query(query, [patientId]);
+    return rows[0];
+};
+
 exports.findDetailsForService = async (appointmentId) => {
     const query = `
         SELECT
+            p.patient_id,
             p.name as patient_name,
             to_char(p.birth_date, 'DD/MM/YYYY') as patient_birth_date,
             p.cpf as patient_cpf,
@@ -150,14 +169,14 @@ exports.findCompletedServiceDetails = async (appointmentId) => {
     };
 };
 
-exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations, status }) => {
+exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations, status, created_by }) => {
     const query = `
         INSERT INTO appointments (
             patient_id, professional_id, unit_id, 
             appointment_datetime, 
-            service_type, status, observations
+            service_type, status, observations, created_by
         )
-        VALUES ($1, $2, $3, COALESCE($4, NOW()), $5, $6, $7)
+        VALUES ($1, $2, $3, COALESCE($4, NOW()), $5, $6, $7, $8)
         RETURNING *;
     `;
     const params = [
@@ -165,7 +184,8 @@ exports.create = async ({ patient_id, professional_id, unit_id, appointment_date
         appointment_datetime, // Pode ser nulo, e o COALESCE usará NOW()
         service_type,
         status || 'scheduled',
-        observations
+        observations,
+        created_by
     ];
     const { rows } = await db.query(query, params);
     return rows[0];
@@ -199,8 +219,13 @@ exports.findByProfessionalAndDateTime = async (professionalId, dateTime) => {
 // NOVA FUNÇÃO: Busca uma entrada específica na lista de espera para um paciente/profissional.
 exports.findWaitingListEntry = async (patientId, professionalId) => {
     const query = `
-        SELECT * FROM appointments 
-        WHERE patient_id = $1 AND professional_id = $2 AND status = 'on_waiting_list'
+        SELECT 
+            apt.*, 
+            to_char(apt.appointment_datetime, 'DD/MM/YYYY') as request_date,
+            creator.name as created_by_name
+        FROM appointments apt
+        LEFT JOIN users creator ON apt.created_by = creator.user_id
+        WHERE apt.patient_id = $1 AND apt.professional_id = $2 AND apt.status = 'on_waiting_list'
         LIMIT 1;
     `;
     const { rows } = await db.query(query, [patientId, professionalId]);

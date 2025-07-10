@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useWaitingListCheck } from '@/hooks/useWaitingListCheck';
 import ConflictConfirmationModal from './ConflictConfirmationModal';
+import { useFutureScheduleCheck } from '@/hooks/useFutureScheduleCheck';
+import FutureScheduleConflictModal from './FutureScheduleConflictModal';
 import api from '@/services/api';
 import { Patient } from '@/types';
 import { Search, X } from 'lucide-react';
@@ -23,6 +25,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
     const [suggestions, setSuggestions] = useState<Patient[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [showFutureScheduleConflictModal, setShowFutureScheduleConflictModal] = useState(false);
     
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observations, setObservations] = useState('');
@@ -30,6 +33,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
     const [showConflictModal, setShowConflictModal] = useState(false);
     
     const { waitingListEntry } = useWaitingListCheck(selectedPatient?.patient_id, professionalId);
+    const { futureAppointment } = useFutureScheduleCheck(selectedPatient?.patient_id);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -47,7 +51,6 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
         setIsSearching(true);
         setHasSearched(true);
         try {
-            console.log("Searching with filters:", activeFilters);
             const response = await api.get('/patients', { params: activeFilters });
             setSuggestions(response.data);
         } catch (error) {
@@ -92,10 +95,17 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
             toast.error("Por favor, selecione um paciente.");
             return;
         }
+        // Passo 1: Verificar se há um agendamento futuro.
+        if (futureAppointment) {
+            setShowFutureScheduleConflictModal(true);
+            return;
+        }
+        // Passo 2: Verificar se está na lista de espera.
         if (waitingListEntry) {
             setShowConflictModal(true);
             return;
         }
+        // Se não houver conflitos, cria diretamente.
         await createNewAppointment();
     };
     
@@ -198,6 +208,17 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                 onConfirm={() => {
                     setShowConflictModal(false);
                     createNewAppointment(waitingListEntry!.appointment_id);
+                }}
+            />
+
+            {/* Modal de Conflito de Agendamento Futuro */}
+            <FutureScheduleConflictModal
+                isOpen={showFutureScheduleConflictModal}
+                onClose={() => setShowFutureScheduleConflictModal(false)}
+                entry={futureAppointment!}
+                onConfirm={() => {
+                    setShowFutureScheduleConflictModal(false);
+                    createNewAppointment(); // Cria um novo agendamento, sem atualizar nenhum existente.
                 }}
             />
         </>
