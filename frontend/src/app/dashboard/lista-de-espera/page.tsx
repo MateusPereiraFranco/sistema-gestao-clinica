@@ -14,7 +14,7 @@ import WaitingListFilters from "@/components/lista-de-espera/WaitingListFilters"
 
 export default function WaitingListPage() {
     const { user } = useAuthStore();
-    const { waitingListProfessional, setWaitingListProfessional } = useFilterStore();
+    const { waitingListProfessional, setWaitingListProfessional, waitingListStartDate, waitingListEndDate } = useFilterStore();
 
     const [waitingList, setWaitingList] = useState<Appointment[]>([]);
     const [professionals, setProfessionals] = useState<User[]>([]);
@@ -22,10 +22,15 @@ export default function WaitingListPage() {
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
     const fetchWaitingList = useCallback(async () => {
+        
         if (!waitingListProfessional) return;
         setIsLoading(true);
         try {
-            const params: any = { status:'on_waiting_list' };
+            const params: any = { 
+                status: ['on_waiting_list'],
+                startDate: waitingListStartDate,
+                endDate: waitingListEndDate,
+            };
             if (waitingListProfessional !== 'all') {
                 params.professionalId = waitingListProfessional;
             }
@@ -36,7 +41,7 @@ export default function WaitingListPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [waitingListProfessional]);
+    }, [waitingListProfessional, waitingListStartDate, waitingListEndDate]);
     
     useEffect(() => {
         const fetchProfessionals = async () => {
@@ -65,7 +70,7 @@ export default function WaitingListPage() {
             <Header title="Lista de Espera" />
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 <AddPatientToList onPatientSelect={setSelectedPatient} />
-                <WaitingListFilters professionals={professionals} />
+                <WaitingListFilters professionals={professionals} onSearch={fetchWaitingList} isLoading={isLoading} />
                 <WaitingListTable list={waitingList} isLoading={isLoading} refreshList={fetchWaitingList} />
             </main>
             <AddToWaitingListModal 

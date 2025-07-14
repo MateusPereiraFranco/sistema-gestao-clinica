@@ -65,6 +65,7 @@ export interface User {
     unit_name?: string;
     is_active: boolean;
     specialty_id?: string | null;
+    has_agenda: boolean;
 }
 
 export interface ServiceDetails {

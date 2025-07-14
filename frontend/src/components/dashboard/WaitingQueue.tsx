@@ -11,6 +11,7 @@ interface WaitingQueueProps {
     isLoading: boolean;
     showProfessionalName?: boolean;
     onCancel: (appointmentId: string) => void;
+    onStartService: (appointmentId: string) => void;
 }
 
 const getVinculoStyle = (vinculo: PatientVinculo | null) => {
@@ -22,7 +23,7 @@ const getVinculoStyle = (vinculo: PatientVinculo | null) => {
     }
 }
 
-export default function WaitingQueue({ queue, isLoading, showProfessionalName = false, onCancel }: WaitingQueueProps) {
+export default function WaitingQueue({ queue, isLoading, showProfessionalName = false, onCancel, onStartService }: WaitingQueueProps) {
     const { user } = useAuthStore();
 
     if (isLoading) {
@@ -72,21 +73,14 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                 </div>
                             ) : (
                                 <>
-                                    <Link 
-                                        href={`/dashboard/atendimento/${item.appointment_id}`}
-                                        className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors
-                                            ${canAttend ? 'hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed'}`
-                                        }
-                                        onClick={(e) => {
-                                            if (!canAttend) {
-                                                e.preventDefault();
-                                                toast.error("Apenas o profissional responsável pode atender.");
-                                            }
-                                        }}
+                                    <button 
+                                        onClick={() => onStartService(item.appointment_id)}
+                                        disabled={!canAttend}
+                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed enabled:hover:bg-indigo-700"
                                     >
                                         <Stethoscope size={18} />
                                         {item.status === 'in_progress' ? 'Continuar' : 'Atender'}
-                                    </Link>
+                                    </button>
                                     {user?.profile === 'master' && (
                                     <button
                                         onClick={() => onCancel(item.appointment_id)}

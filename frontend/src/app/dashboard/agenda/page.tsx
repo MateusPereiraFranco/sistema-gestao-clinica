@@ -47,12 +47,12 @@ export default function AgendaPage() {
             setIsFetchingProfessionals(true);
             try {
                 const response = await api.get('/users');
-                const professionalList: User[] = response.data.filter((u: User) => u.profile === 'normal');
+                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true && u.is_active === true);
                 setProfessionals(professionalList);
                 
                 const currentProfessional = useFilterStore.getState().agendaProfessional;
                 if (!currentProfessional || !professionalList.some(p => p.user_id === currentProfessional)) {
-                    if (user.profile === 'normal' && professionalList.some(p => p.user_id === user.user_id)) {
+                    if (user.has_agenda === true && professionalList.some(p => p.user_id === user.user_id)) {
                         setAgendaProfessional(user.user_id);
                     } else if (professionalList.length > 0) {
                         setAgendaProfessional(professionalList[0].user_id);

@@ -6,7 +6,9 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { LogIn, Mail, Lock, BriefcaseMedical } from 'lucide-react';
-import { useFilterStore } from '@/stores/useFilterStore'; // <-- Importar a store de filtros
+import { useFilterStore } from '@/stores/useFilterStore';
+import Link from 'next/link';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 interface LoginResponse {
   token: string;
@@ -108,9 +110,7 @@ export default function LoginPage() {
                   <div className="absolute inset-y-0 left-0 top-7 flex items-center pl-3 pointer-events-none">
                     <Lock className="w-5 h-5 text-gray-400" />
                   </div>
-                  <input id="password" name="password" type="password" autoComplete="current-password" required
-                    className="w-full py-3 pl-10 pr-4 text-gray-900 border border-gray-300 rounded-lg shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <PasswordInput id="password" name="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"/>
                 </div>
                 <div>
                   <button type="submit" disabled={isLoading}
@@ -119,6 +119,13 @@ export default function LoginPage() {
                     {isLoading ? 'A aguardar...' : 'Entrar'}
                   </button>
                 </div>
+                <div className="flex items-center justify-center">
+                        <div className="text-sm">
+                            <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                                Esqueceu a sua palavra-passe?
+                            </Link>
+                        </div>
+                    </div>
               </form>
             </div>
           </div>

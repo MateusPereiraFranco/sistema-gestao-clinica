@@ -2,8 +2,8 @@ const userModel = require('./usersModel');
 
 // Apenas uma pequena modificação na validação, o resto é igual
 exports.createUser = async (userData, requestingUser) => {
-    const { email, password, name, specialty_id } = userData; // specialty_id é opcional
-    if (!email || !password || !name) {
+    const { email, password, name, specialty_id, has_agenda } = userData;
+    if (!email || !password || !name || !specialty_id || !has_agenda) {
         const error = new Error('Nome, email e palavra-passe são obrigatórios.');
         error.statusCode = 400;
         throw error;
@@ -21,6 +21,9 @@ exports.createUser = async (userData, requestingUser) => {
 exports.getAllUsers = async (filters, requestingUser) => {
     if (requestingUser.profile === 'master' || requestingUser.profile === 'normal') {
         filters.unitId = requestingUser.unit_id;
+    }
+    if (!filters.is_active) {
+        filters.is_active = true;
     }
     return userModel.findAll(filters);
 };
@@ -66,11 +69,13 @@ exports.updateUser = async (id, userData, requestingUser) => {
     return userModel.update(id, userData);
 };
 
-exports.deleteUser = async (id) => {
-    const deletedCount = await userModel.remove(id);
-    if (deletedCount === 0) {
-        const error = new Error('Utilizador a ser apagado não encontrado.');
-        error.statusCode = 404;
-        throw error;
+exports.toggleUserStatus = async (userIdToToggle, requestingUser) => {
+    const userToToggle = await userModel.findById(userIdToToggle);
+    if (!userToToggle) throw new Error("Utilizador não encontrado.");
+
+    if (requestingUser.profile === 'master' && userToToggle.unit_id !== requestingUser.unit_id) {
+        throw new Error("Não pode alterar utilizadores de outra unidade.");
     }
+
+    return userModel.toggleActiveStatus(userIdToToggle, userToToggle.is_active);
 };

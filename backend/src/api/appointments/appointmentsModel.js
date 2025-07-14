@@ -10,9 +10,9 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
             apt.service_type,
             apt.status,
             apt.observations,
+            apt.vinculo,
             p.patient_id,
             p.name as patient_name,
-            p.vinculo
         FROM appointments apt
         JOIN patients p ON apt.patient_id = p.patient_id
         WHERE apt.professional_id = $1 AND apt.appointment_datetime::date = $2::date
@@ -23,14 +23,14 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
 };
 
 exports.findAppointments = async (filters) => {
-    const { professionalId, date, statusArray, period, unit_id } = filters;
+    const { professionalId, date, statusArray, period, unit_id, startDate, endDate, is_active } = filters;
     let query = `
         SELECT
             apt.appointment_id, apt.professional_id, apt.appointment_datetime,
             to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') as time,
             to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as date_formatted,
-            apt.service_type, apt.status, apt.observations,
-            p.patient_id, p.name as patient_name, p.vinculo, p.cpf as patient_cpf, p.cns as patient_cns, 
+            apt.service_type, apt.status, apt.observations, apt.vinculo,
+            p.patient_id, p.name as patient_name, p.cpf as patient_cpf, p.cns as patient_cns, 
             to_char(p.birth_date AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as patient_birth_date,
             p.mother_name as patient_mother_name,
             prof.name as professional_name
@@ -45,6 +45,10 @@ exports.findAppointments = async (filters) => {
     if (date) {
         query += ` AND apt.appointment_datetime::date = $${paramIndex++}::date`;
         params.push(date);
+    }
+    if (startDate && endDate) {
+        query += ` AND apt.appointment_datetime::date BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+        params.push(startDate, endDate);
     }
     if (professionalId && professionalId !== 'all') {
         query += ` AND apt.professional_id = $${paramIndex++}`;
@@ -62,6 +66,10 @@ exports.findAppointments = async (filters) => {
         query += ` AND to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24MI') < '1200'`;
     } else if (period === 'tarde') {
         query += ` AND to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24MI') >= '1200'`;
+    }
+    if (is_active !== undefined) {
+        query += ` AND prof.is_active = $${paramIndex++}`;
+        params.push(is_active);
     }
 
     query += ' ORDER BY apt.appointment_datetime ASC;';
@@ -169,14 +177,14 @@ exports.findCompletedServiceDetails = async (appointmentId) => {
     };
 };
 
-exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations, status, created_by }) => {
+exports.create = async ({ patient_id, professional_id, unit_id, appointment_datetime, service_type, observations, status, created_by, vinculo }) => {
     const query = `
         INSERT INTO appointments (
             patient_id, professional_id, unit_id, 
             appointment_datetime, 
-            service_type, status, observations, created_by
+            service_type, status, observations, created_by, vinculo
         )
-        VALUES ($1, $2, $3, COALESCE($4, NOW()), $5, $6, $7, $8)
+        VALUES ($1, $2, $3, COALESCE($4, NOW()), $5, $6, $7, $8, $9)
         RETURNING *;
     `;
     const params = [
@@ -185,7 +193,8 @@ exports.create = async ({ patient_id, professional_id, unit_id, appointment_date
         service_type,
         status || 'scheduled',
         observations,
-        created_by
+        created_by,
+        vinculo
     ];
     const { rows } = await db.query(query, params);
     return rows[0];

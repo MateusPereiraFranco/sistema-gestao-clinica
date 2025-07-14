@@ -21,7 +21,7 @@ export default function RelatoriosPage() {
 
     useEffect(() => {
         api.get('/users').then(res => {
-            const profList = res.data.filter((u: User) => u.profile === 'normal');
+            const profList = res.data.filter((u: User) => u.has_agenda && u.is_active);
             setProfessionals(profList);
             if (user?.profile === 'normal') setReportProfessional(user.user_id);
         });

@@ -15,11 +15,11 @@ router.route('/')
     .post(protect, restrictTo('master'), userController.createUser);
 
 router.get('/:id/for-edit', protect, userController.getUserForEdit);
+router.patch('/:id/toggle-active', protect, restrictTo('admin', 'master'), userController.toggleUserStatus);
 
 router.route('/:id')
     // Apenas um master pode ver, atualizar ou apagar os detalhes de um utilizador.
     .get(protect, restrictTo('admin', 'master'), userController.getUserById)
     .put(protect, restrictTo('admin', 'master'), userController.updateUser)
-    .delete(protect, restrictTo('admin', 'master'), userController.deleteUser);
 
 module.exports = router;

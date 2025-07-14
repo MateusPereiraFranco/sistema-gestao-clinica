@@ -17,6 +17,10 @@ interface FilterState {
   setAgendaDate: (date: string) => void;
   waitingListProfessional: string;
   setWaitingListProfessional: (id: string) => void;
+  waitingListStartDate: string;
+  waitingListEndDate: string;
+  setWaitingListStartDate: (date: string) => void;
+  setWaitingListEndDate: (date: string) => void;
   resetDatesToToday: () => void;
 
   reportProfessional: string;
@@ -32,6 +36,11 @@ export const useFilterStore = create<FilterState>()(
     (set) => ({
       dashboardProfessional: 'all',
       dashboardPeriod: 'todos',
+      waitingListStartDate: new Date().toISOString().split('T')[0],
+      waitingListEndDate: new Date().toISOString().split('T')[0],
+
+      setWaitingListStartDate: (date) => set({ waitingListStartDate: date }),
+      setWaitingListEndDate: (date) => set({ waitingListEndDate: date }),
       
       setDashboardProfessional: (id) => set({ dashboardProfessional: id }),
       setDashboardPeriod: (period) => set({ dashboardPeriod: period }),

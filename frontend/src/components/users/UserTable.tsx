@@ -1,7 +1,7 @@
 'use client';
 
 import { User } from '@/types';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import Link from 'next/link';
 
@@ -9,9 +9,10 @@ interface UserTableProps {
     users: User[];
     isLoading: boolean;
     onDelete: (userId: string) => void;
+    onToggleStatus: (userId: string) => void;
 }
 
-export default function UserTable({ users, isLoading, onDelete }: UserTableProps) {
+export default function UserTable({ users, isLoading, onToggleStatus }: UserTableProps) {
     const { user: loggedInUser } = useAuthStore();
 
     if (isLoading) return <p className="text-center p-8">A carregar utilizadores...</p>;
@@ -40,7 +41,11 @@ export default function UserTable({ users, isLoading, onDelete }: UserTableProps
                                 <Link href={`/dashboard/usuarios/${user.user_id}/editar`} className="inline-flex items-center text-blue-600 hover:text-blue-900">
                                     <Pencil className="w-5 h-5"/>
                                 </Link>
-                                <button onClick={() => onDelete(user.user_id)} className="text-red-600 hover:text-red-900" title="Apagar Utilizador"><Trash2 className="w-5 h-5"/></button>
+                                <button onClick={() => onToggleStatus(user.user_id)} 
+                                    className={user.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
+                                    title={user.is_active ? 'Inativar Utilizador' : 'Reativar Utilizador'}>
+                                    {user.is_active ? <UserX className="w-5 h-5"/> : <UserCheck className="w-5 h-5"/>}
+                                </button>
                             </td>
                         </tr>
                     ))}

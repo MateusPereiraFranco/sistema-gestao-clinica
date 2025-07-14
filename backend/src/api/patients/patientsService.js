@@ -2,9 +2,6 @@ const patientModel = require('./patientsModel');
 const { isValidCPF, isValidCNS } = require('../../utils/validators');
 
 exports.getAllPatients = (filters, user) => {
-    if (user.profile === 'master' || user.profile === 'normal') {
-        filters.unitId = user.unit_id;
-    }
     return patientModel.findWithFilters(filters);
 };
 
@@ -15,11 +12,6 @@ exports.getPatientForEdit = async (id, user) => {
         error.statusCode = 404;
         throw error;
     }
-    if (user.profile !== 'admin' && patient.unit_id !== user.unit_id) {
-        const error = new Error('Acesso negado a este paciente.');
-        error.statusCode = 403;
-        throw error;
-    }
     return patient;
 };
 
@@ -27,8 +19,7 @@ exports.getPatientForEdit = async (id, user) => {
 exports.createPatient = async (patientData, userId, user_unit_id) => {
     const requiredFields = [
         'name', 'birth_date', 'mother_name', 'cell_phone_1',
-        'cep', 'street', 'number', 'neighborhood', 'city', 'state',
-        'vinculo' // <-- Adicionado à lista de campos obrigatórios
+        'cep', 'street', 'number', 'neighborhood', 'city', 'state'
     ];
 
     for (const field of requiredFields) {
@@ -123,7 +114,7 @@ exports.deletePatient = async (id) => {
 };
 
 // NOVA FUNÇÃO: Serviço para obter o histórico do paciente.
-exports.getPatientHistory = async (patientId) => {
+exports.getPatientHistory = async (patientId, filters) => {
     // Primeiro, busca o paciente para garantir que ele existe.
     const patient = await patientModel.findById(patientId);
     if (!patient) {
@@ -131,8 +122,8 @@ exports.getPatientHistory = async (patientId) => {
         error.statusCode = 404;
         throw error;
     }
-
-    const history = await patientModel.findHistoryByPatientId(patientId);
+    const { startDate, endDate } = filters;
+    const history = await patientModel.findHistoryByPatientId(patientId, startDate, endDate);
 
     // Retorna os dados do paciente e o seu histórico.
     return {

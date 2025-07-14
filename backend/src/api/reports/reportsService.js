@@ -4,9 +4,15 @@ exports.getGroupedSummaryReport = async (filters, user) => {
     if (!filters.startDate || !filters.endDate) {
         throw new Error("Data de início e data de fim são obrigatórias.");
     }
+    if (!filters.is_active) {
+        filters.is_active = true;
+    }
 
     if (user.profile === 'master' || user.profile === 'normal') {
         filters.unitId = user.unit_id;
+    }
+    if (!filters.has_agenda) {
+        filters.has_agenda = true;
     }
     const flatData = await reportsModel.getGroupedServicesSummary(filters);
 

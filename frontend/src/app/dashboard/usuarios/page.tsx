@@ -56,6 +56,21 @@ export default function GerirUsuariosPage() {
         }
     };
 
+    const handleToggleStatus = async (userId: string) => {
+        const userToToggle = users.find(u => u.user_id === userId);
+        const actionText = userToToggle?.is_active ? 'inativar' : 'reativar';
+        
+        if (window.confirm(`Tem a certeza que deseja ${actionText} este utilizador?`)) {
+            try {
+                await api.patch(`/users/${userId}/toggle-active`);
+                toast.success(`Utilizador ${actionText} com sucesso.`);
+                fetchUsers(); // Recarrega a lista para mostrar o novo status.
+            } catch (error) {
+                toast.error(`Falha ao ${actionText} o utilizador.`);
+            }
+        }
+    };
+
     const headerAction = (
         <Link href="/dashboard/usuarios/novo"
             className="flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700">
@@ -69,7 +84,7 @@ export default function GerirUsuariosPage() {
             <Header title="Gestão de Utilizadores" action={headerAction} />
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 <UserFilters specialties={specialties} onSearch={fetchUsers} isLoading={isLoading} />
-                <UserTable users={users} isLoading={isLoading} onDelete={handleDeleteUser} />
+                <UserTable users={users} isLoading={isLoading} onDelete={handleDeleteUser} onToggleStatus={handleToggleStatus} />
             </main>
         </>
     );

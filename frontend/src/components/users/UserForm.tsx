@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import PasswordInput from '../ui/PasswordInput';
 
 interface UserFormProps {
     userToEdit?: User; // O utilizador a ser editado (opcional)
@@ -28,6 +29,7 @@ export default function UserForm({ userToEdit }: UserFormProps) {
         unit_id: userToEdit?.unit_id || loggedInUser?.unit_id || '',
         specialty_id: userToEdit?.specialty_id || '',
         is_active: userToEdit?.is_active ?? true,
+        has_agenda: userToEdit?.has_agenda ?? true,
     });
 
     useEffect(() => {
@@ -69,7 +71,7 @@ export default function UserForm({ userToEdit }: UserFormProps) {
             setIsLoading(false);
         }
     };
-
+    console.log(formData);
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
             {/* Secção de Detalhes do Utilizador */}
@@ -87,7 +89,7 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                     {!isEditing && (
                         <div className="sm:col-span-3">
                             <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">Palavra-passe Inicial</label>
-                            <input type="password" name="password" id="password" required={!isEditing} value={formData.password} onChange={handleChange} className="mt-2 block w-full rounded-md border-0 py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300"/>
+                            <PasswordInput id="password_create" name="password" required={!isEditing} value={formData.password} onChange={handleChange} placeholder="••••••••"/>
                         </div>
                     )}
                 </div>
@@ -111,6 +113,16 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                            {specialties.map(spec => <option key={spec.specialty_id} value={spec.specialty_id}>{spec.name}</option>)}
                         </select>
                     </div>
+                    <div className="sm:col-span-2 flex items-end pb-1">
+                                <div className="relative flex gap-x-3">
+                                    <div className="flex h-6 items-center">
+                                        <input id="has_agenda" name="has_agenda" type="checkbox" checked={formData.has_agenda} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
+                                    </div>
+                                    <div className="text-sm leading-6">
+                                        <label htmlFor="has_agenda" className="font-medium text-gray-900">Profissional de Atendimento (tem agenda)</label>
+                                    </div>
+                                </div>
+                            </div>
                      <div className="sm:col-span-2">
                         <label htmlFor="unit_id" className="block text-sm font-medium leading-6 text-gray-900">Unidade</label>
                         <select 
@@ -118,7 +130,6 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                             name="unit_id" 
                             value={formData.unit_id} 
                             onChange={handleChange} 
-                            // O seletor é desativado se o utilizador for 'master', pois ele só pode criar na sua própria unidade.
                             disabled={loggedInUser?.profile === 'master'} 
                             className="mt-2 block w-full rounded-md border-0 py-2.5 shadow-sm ring-1 ring-inset ring-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >

@@ -44,7 +44,6 @@ export default function DashboardFilters({ professionals }: DashboardFiltersProp
                     <option value="tarde">Tarde</option>
                 </select>
             </div>
-            {/* Seletor de Data Adicionado */}
             <div className="flex items-center gap-2">
                 <button onClick={() => handleDateChange(-1)} className="p-2 rounded-md hover:bg-gray-200"><ChevronLeft size={20} /></button>
                 <input

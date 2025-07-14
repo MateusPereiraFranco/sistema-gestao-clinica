@@ -1,14 +1,15 @@
 const db = require('../../config/db');
 
 exports.getGroupedServicesSummary = async (filters) => {
-    const { startDate, endDate, professionalId, unitId } = filters;
+    const { startDate, endDate, professionalId, unitId, is_active, has_agenda } = filters;
 
     let query = `
         SELECT
             u.user_id,
             u.name as professional_name,
+            u.has_agenda,
             s.name as specialty_name,
-            p.vinculo,
+            apt.vinculo,
             COUNT(apt.appointment_id)::integer as service_count
         FROM
             users u
@@ -26,7 +27,7 @@ exports.getGroupedServicesSummary = async (filters) => {
     const params = [startDate, endDate];
     let paramIndex = 3;
 
-    const whereConditions = ["u.profile = 'normal'", "u.is_active = TRUE"];
+    const whereConditions = ['u.has_agenda = true'];
     if (professionalId && professionalId !== 'all') {
         whereConditions.push(`u.user_id = $${paramIndex++}`);
         params.push(professionalId);
@@ -37,14 +38,18 @@ exports.getGroupedServicesSummary = async (filters) => {
         whereConditions.push(`u.unit_id = $${paramIndex++}`);
         params.push(unitId);
     }
+    if (is_active !== undefined) {
+        whereConditions.push(`u.is_active = $${paramIndex++}`);
+        params.push(is_active);
+    }
 
     query += ` WHERE ${whereConditions.join(' AND ')}`;
 
     query += `
         GROUP BY
-            u.user_id, s.name, p.vinculo
+            u.user_id, s.name, apt.vinculo
         ORDER BY
-            professional_name ASC, p.vinculo ASC;
+            professional_name ASC, apt.vinculo ASC;
     `;
 
     const { rows } = await db.query(query, params);

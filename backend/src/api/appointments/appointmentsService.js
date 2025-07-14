@@ -22,14 +22,17 @@ exports.getAppointments = async (filters, user) => {
         if (professional.unit_id !== user.unit_id) {
             throw new Error("Não autorizado a ver a agenda deste profissional.");
         }
+        if (!filters.is_active) {
+            filters.is_active = true;
+        }
     }
     return appointmentModel.findAppointments(filters);
 };
 
 exports.createAppointment = async (appointmentData) => {
-    const { professional_id, appointment_datetime, patient_id, observations } = appointmentData;
+    const { professional_id, appointment_datetime, patient_id, observations, vinculo } = appointmentData;
 
-    if (!professional_id || !appointment_datetime || !patient_id) {
+    if (!professional_id || !appointment_datetime || !patient_id || !vinculo) {
         const error = new Error('Dados insuficientes para criar o agendamento.');
         error.statusCode = 400;
         throw error;
@@ -65,7 +68,9 @@ exports.createAppointment = async (appointmentData) => {
         appointment_datetime: appointment_datetime,
         service_type: specialtyName,
         observations: observations || null,
-        status: 'scheduled'
+        status: 'scheduled',
+        vinculo: vinculo,
+        created_by: professional_id
     };
 
     return appointmentModel.create(fullAppointmentData);
@@ -208,6 +213,7 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
                         service_type: specialtyName,
                         observations: `Encaminhado por Dr(a). ${loggedInUser.name} em ${new Date().toLocaleDateString('pt-BR')}`,
                         status: 'on_waiting_list',
+                        vinculo: appointment.vinculo || 'nenhum',
                         created_by: loggedInUserId
                     });
                 }
@@ -225,7 +231,9 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
             appointment_datetime: new Date(),
             service_type: loggedInUser.specialty_name || 'Retorno',
             observations: `Retorno solicitado em ${follow_up_days} dias pelo(a) Dr(a). ${loggedInUser.name}.`,
-            status: 'on_waiting_list'
+            status: 'on_waiting_list',
+            vinculo: appointment.vinculo || 'nenhum',
+            created_by: loggedInUserId,
         });
     }
 
@@ -245,8 +253,8 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
 };
 
 exports.createOnDemandService = async (data) => {
-    const { patient_id, professional_id } = data;
-    if (!patient_id || !professional_id) {
+    const { patient_id, professional_id, vinculo } = data;
+    if (!patient_id || !professional_id || !vinculo) {
         const error = new Error("ID do paciente e do profissional são obrigatórios.");
         error.statusCode = 400;
         throw error;
@@ -275,7 +283,9 @@ exports.createOnDemandService = async (data) => {
         appointment_datetime: null,
         service_type: specialtyName,
         observations: 'Atendimento avulso (gerado na receção)',
-        status: 'waiting'
+        status: 'waiting',
+        vinculo: vinculo,
+        created_by: professional_id
     };
 
     return appointmentModel.create(appointmentData);

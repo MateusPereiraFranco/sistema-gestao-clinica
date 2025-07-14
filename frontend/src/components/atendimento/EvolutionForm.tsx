@@ -32,8 +32,7 @@ export default function EvolutionForm({ appointmentId, patientId }: EvolutionFor
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        api.get('/users', { params: { profile: 'normal' } }).then(res => {
-            // CORREÇÃO: Filtra a lista para remover o profissional atualmente logado.
+        api.get('/users', { params: { has_agenda: true, is_active: true } }).then(res => {
             const filteredProfessionals = res.data.filter((pro: User) => pro.user_id !== loggedInUser?.user_id);
             setProfessionals(filteredProfessionals);
         });

@@ -9,11 +9,13 @@ import WaitingQueue from "@/components/dashboard/WaitingQueue";
 import toast from "react-hot-toast";
 import DashboardFilters from "@/components/dashboard/DashboardFilters";
 import { useFilterStore } from "@/stores/useFilterStore";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
     const { user } = useAuthStore();
     const { dashboardProfessional, setDashboardProfessional, dashboardPeriod, dashboardDate } = useFilterStore();
-    
+    const router = useRouter();
+
     const [queue, setQueue] = useState<Appointment[]>([]);
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,13 +43,26 @@ export default function DashboardPage() {
             setIsLoading(false);
         }
     }, [dashboardProfessional, dashboardPeriod, dashboardDate]);
+
+    const handleStartService = async (appointmentId: string) => {
+        const toastId = toast.loading("A iniciar atendimento...");
+        try {
+            await api.patch(`/appointments/${appointmentId}/start-service`);
+            toast.success("Atendimento iniciado.", { id: toastId });
+            // Não precisa de chamar fetchWaitingQueue() aqui, pois o redirecionamento
+            // irá fazer com que a página seja recarregada de qualquer forma.
+            router.push(`/dashboard/atendimento/${appointmentId}`);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Não foi possível iniciar o atendimento.", { id: toastId });
+        }
+    };
     
     useEffect(() => {
         const fetchProfessionals = async () => {
             if (!user) return;
             try {
                 const response = await api.get('/users');
-                const professionalList: User[] = response.data.filter((u: User) => u.profile === 'normal');
+                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true && u.is_active === true);
                 setProfessionals(professionalList);
                 
                 if (user.profile === 'normal') {
@@ -87,6 +102,7 @@ export default function DashboardPage() {
                     isLoading={isLoading}
                     showProfessionalName={dashboardProfessional === 'all'}
                     onCancel={handleCancelAppointment}
+                    onStartService={handleStartService}
                 />
             </main>
         </>

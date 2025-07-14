@@ -6,7 +6,7 @@ import ConflictConfirmationModal from './ConflictConfirmationModal';
 import { useFutureScheduleCheck } from '@/hooks/useFutureScheduleCheck';
 import FutureScheduleConflictModal from './FutureScheduleConflictModal';
 import api from '@/services/api';
-import { Patient } from '@/types';
+import { Patient, PatientVinculo } from '@/types';
 import { Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { maskCPF } from '@/utils/masks';
@@ -21,6 +21,7 @@ interface ModalProps {
 }
 
 export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCreated, slot, date, professionalId }: ModalProps) {
+    const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const [searchFilters, setSearchFilters] = useState({ name: '', cpf: '', birth_date: '' });
     const [suggestions, setSuggestions] = useState<Patient[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
@@ -78,6 +79,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                     professional_id: professionalId,
                     appointment_datetime,
                     observations,
+                    vinculo,
                 });
             }
             toast.success("Agendamento criado com sucesso!", { id: toastId });
@@ -181,7 +183,16 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                                 <button onClick={resetSearch} className="text-xs font-semibold text-blue-600 hover:underline">Procurar outro</button>
                             </div>
                         )}
-
+                        <div>
+                            <label htmlFor="vinculo_agendamento" className="block text-sm font-medium text-gray-700 mb-1">Vínculo do Atendimento</label>
+                            <select id="vinculo_agendamento" value={vinculo} onChange={(e) => setVinculo(e.target.value as PatientVinculo)}
+                                className="w-full py-2 px-3 border border-gray-300 rounded-md">
+                                <option value="nenhum">Nenhum</option>
+                                <option value="saude">Saúde</option>
+                                <option value="educação">Educação</option>
+                                <option value="AMA">AMA</option>
+                            </select>
+                        </div>
                         <div>
                             <label htmlFor="observations" className="block text-sm font-medium text-gray-700 mb-1">Observações (Opcional)</label>
                             <textarea id="observations" rows={3} value={observations} onChange={(e) => setObservations(e.target.value)}
@@ -190,7 +201,6 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                             />
                         </div>
                     </div>
-
                     <div className="flex justify-end gap-4 mt-6 pt-4 border-t">
                         <button type="button" onClick={onClose} className="py-2 px-4 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 font-semibold">Cancelar</button>
                         <button onClick={handleConfirmAppointment} disabled={!selectedPatient || isLoading}

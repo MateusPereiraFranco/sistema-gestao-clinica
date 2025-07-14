@@ -4,15 +4,16 @@ exports.getAppointments = async (req, res, next) => {
     try {
         // CORREÇÃO: A lógica agora lida explicitamente com o formato 'status[]'
         // enviado pelo frontend com arrays.
-        const { professionalId, date, period } = req.query;
+        const { professionalId, date, period, startDate, endDate } = req.query;
         const status = req.query['status[]'] || req.query.status;
 
         const filters = {
             professionalId,
             date,
-            // Garante que o status seja sempre um array, mesmo que venha como string única.
             statusArray: Array.isArray(status) ? status : (status ? [status] : []),
-            period
+            period,
+            startDate,
+            endDate
         };
 
         const appointments = await appointmentService.getAppointments(filters, req.user);

@@ -3,7 +3,7 @@
 import { useWaitingListCheck } from '@/hooks/useWaitingListCheck';
 import ConflictConfirmationModal from '../agenda/ConflictConfirmationModal';
 import api from '@/services/api';
-import { Patient, User } from '@/types';
+import { Patient, User, PatientVinculo } from '@/types';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ interface LaunchServiceModalProps {
 }
 
 export default function LaunchServiceModal({ patient, onClose, onServiceLaunched }: LaunchServiceModalProps) {
+    const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const router = useRouter();
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [selectedProfessional, setSelectedProfessional] = useState('');
@@ -46,6 +47,7 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
                 await api.post('/appointments/on-demand', {
                     patient_id: patient!.patient_id,
                     professional_id: selectedProfessional,
+                    vinculo: vinculo,
                 });
             }
             toast.success("Paciente adicionado à fila de atendimento!", { id: toastId });
@@ -100,6 +102,16 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
                                 ))}
                             </select>
                         </div>
+                        <div>
+                        <label htmlFor="vinculo_lancamento" className="block text-sm font-medium text-gray-700">Vínculo do Atendimento</label>
+                        <select id="vinculo_lancamento" value={vinculo} onChange={(e) => setVinculo(e.target.value as PatientVinculo)}
+                            className="mt-1 w-full p-2 border border-gray-300 rounded-md">
+                            <option value="nenhum">Nenhum</option>
+                            <option value="saude">Saúde</option>
+                            <option value="educação">Educação</option>
+                            <option value="AMA">AMA</option>
+                        </select>
+                    </div>
                     </div>
                     <div className="flex justify-end gap-4 mt-6 pt-4 border-t">
                         <button onClick={onClose} className="py-2 px-4 rounded-md bg-gray-100 font-semibold hover:bg-gray-200">Cancelar</button>

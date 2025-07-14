@@ -34,7 +34,6 @@ export default function PatientForm({ patient }: { patient?: Patient }) {
         city: patient?.city || '',
         state: patient?.state || '',
         observations: patient?.observations || '',
-        vinculo: patient?.vinculo || 'nenhum',
         father_name: patient?.father_name || '',
         cns: patient?.cns || '',
         unit_id: patient?.unit_id || user?.unit_id || '',
@@ -143,15 +142,6 @@ export default function PatientForm({ patient }: { patient?: Patient }) {
                     <div className="sm:col-span-2">
                         <label htmlFor="cns" className="block text-sm font-medium leading-6 text-gray-900">CNS (Cartão SUS)</label>
                         <input type="text" name="cns" id="cns" value={formData.cns} onChange={handleChange} placeholder="000 0000 0000 0000" maxLength={18} className="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600" />
-                    </div>
-                     <div className="sm:col-span-2">
-                        <label htmlFor="vinculo" className="block text-sm font-medium leading-6 text-gray-900">Vínculo</label>
-                        <select id="vinculo" name="vinculo" required value={formData.vinculo} onChange={handleChange} className="mt-2 block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600">
-                            <option value="nenhum">Nenhum</option>
-                            <option value="saude">Saúde</option>
-                            <option value="educação">Educação</option>
-                            <option value="AMA">AMA</option>
-                        </select>
                     </div>
                 </div>
             </div>

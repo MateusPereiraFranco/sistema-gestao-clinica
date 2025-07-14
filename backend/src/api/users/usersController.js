@@ -11,9 +11,8 @@ exports.createUser = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
     try {
-        // Extrai os novos filtros da query e passa-os para o serviço.
-        const { name, specialtyId, profile } = req.query;
-        const filters = { name, specialtyId, profile };
+        const { name, specialtyId, profile, activeOnly } = req.query;
+        const filters = { name, specialtyId, profile, activeOnly };
         const users = await userService.getAllUsers(filters, req.user);
         res.status(200).json(users);
     } catch (error) {
@@ -48,10 +47,10 @@ exports.updateUser = async (req, res, next) => {
     }
 };
 
-exports.deleteUser = async (req, res, next) => {
+exports.toggleUserStatus = async (req, res, next) => {
     try {
-        await userService.deleteUser(req.params.id);
-        res.status(204).send(); // 204 No Content
+        await userService.toggleUserStatus(req.params.id, req.user);
+        res.status(204).send();
     } catch (error) {
         next(error);
     }

@@ -4,7 +4,7 @@ const { hashPassword } = require('../../utils/passwordUtil');
 exports.findWithFilters = async (filters) => {
     let baseQuery = `
         SELECT patient_id, name, cpf, mother_name, to_char(birth_date, 'DD/MM/YYYY') as birth_date_formatted,unit_id,
-               cell_phone_1, cell_phone_2, cns, cep, street, "number", neighborhood, city, state, vinculo, unit_id
+               cell_phone_1, cell_phone_2, cns, cep, street, "number", neighborhood, city, state, unit_id
         FROM patients
     `;
     const conditions = [];
@@ -53,22 +53,22 @@ exports.create = async (patientData) => {
     const {
         name, mother_name, father_name, cpf, cns, birth_date,
         cell_phone_1, cell_phone_2, cep, street, number, neighborhood,
-        city, state, observations, vinculo, registered_by, unit_id
+        city, state, observations, registered_by, unit_id
     } = patientData;
 
     const query = `
         INSERT INTO patients (
             name, mother_name, father_name, cpf, cns, birth_date, cell_phone_1, 
             cell_phone_2, cep, street, "number", neighborhood, city, state, 
-            observations, vinculo, registered_by, unit_id
+            observations, registered_by, unit_id
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING *;
     `;
     const params = [
         name, mother_name, father_name, cpf, cns, birth_date, cell_phone_1,
         cell_phone_2, cep, street, number, neighborhood, city, state,
-        observations, vinculo, registered_by, unit_id
+        observations, registered_by, unit_id
     ];
     const { rows } = await db.query(query, params);
     return rows[0];
@@ -78,7 +78,7 @@ exports.update = async (id, patientData, unit_id) => {
     const {
         name, mother_name, father_name, cpf, cns, birth_date,
         cell_phone_1, cell_phone_2, cep, street, number, neighborhood,
-        city, state, observations, vinculo
+        city, state, observations
     } = patientData;
 
     const query = `
@@ -87,14 +87,14 @@ exports.update = async (id, patientData, unit_id) => {
             name = $1, mother_name = $2, father_name = $3, cpf = $4, cns = $5, 
             birth_date = $6, cell_phone_1 = $7, cell_phone_2 = $8, cep = $9, 
             street = $10, "number" = $11, neighborhood = $12, city = $13, 
-            state = $14, observations = $15, vinculo = $16, unit_id = $17, updated_at = NOW()
-        WHERE patient_id = $18
+            state = $14, observations = $15, unit_id = $16, updated_at = NOW()
+        WHERE patient_id = $17
         RETURNING *;
     `;
     const params = [
         name, mother_name, father_name, cpf, cns, birth_date,
         cell_phone_1, cell_phone_2, cep, street, number, neighborhood,
-        city, state, observations, vinculo, unit_id,
+        city, state, observations, unit_id,
         id
     ];
     const { rows } = await db.query(query, params);
@@ -140,7 +140,7 @@ exports.findByIdForEdit = async (id) => {
             patient_id, name, cpf, mother_name, father_name, cns,
             to_char(birth_date, 'YYYY-MM-DD') as birth_date,
             cell_phone_1, cell_phone_2, cep, street, "number",
-            neighborhood, city, state, observations, vinculo, unit_id
+            neighborhood, city, state, observations, unit_id
         FROM patients 
         WHERE patient_id = $1;
     `;
@@ -154,8 +154,8 @@ exports.remove = async (id) => {
 };
 
 // NOVA FUNÇÃO: Busca o histórico completo de atendimentos de um paciente.
-exports.findHistoryByPatientId = async (patientId) => {
-    const query = `
+exports.findHistoryByPatientId = async (patientId, startDate, endDate) => {
+    let query = `
         SELECT
             apt.appointment_id,
             to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as date,
@@ -166,8 +166,17 @@ exports.findHistoryByPatientId = async (patientId) => {
         FROM appointments apt
         JOIN users u ON apt.professional_id = u.user_id
         WHERE apt.patient_id = $1
-        ORDER BY apt.appointment_datetime DESC;
     `;
-    const { rows } = await db.query(query, [patientId]);
+    const params = [patientId];
+    let paramIndex = 2;
+
+    if (startDate && endDate) {
+        query += ` AND apt.appointment_datetime::date BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+        params.push(startDate, endDate);
+    }
+
+    query += ' ORDER BY apt.appointment_datetime DESC;';
+
+    const { rows } = await db.query(query, params);
     return rows;
 };

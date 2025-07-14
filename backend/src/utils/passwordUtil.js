@@ -17,6 +17,5 @@ exports.hashPassword = async (password) => {
  * @returns {Promise<boolean>} True se as senhas correspondem.
  */
 exports.comparePassword = async (password, hashedPassword) => {
-    console.log(password, hashedPassword);
     return bcrypt.compare(password, hashedPassword);
 };
