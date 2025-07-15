@@ -114,15 +114,15 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                         </select>
                     </div>
                     <div className="sm:col-span-2 flex items-end pb-1">
-                                <div className="relative flex gap-x-3">
-                                    <div className="flex h-6 items-center">
-                                        <input id="has_agenda" name="has_agenda" type="checkbox" checked={formData.has_agenda} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
-                                    </div>
-                                    <div className="text-sm leading-6">
-                                        <label htmlFor="has_agenda" className="font-medium text-gray-900">Profissional de Atendimento (tem agenda)</label>
-                                    </div>
-                                </div>
+                        <div className="relative flex gap-x-3">
+                            <div className="flex h-6 items-center">
+                                <input id="has_agenda" name="has_agenda" type="checkbox" checked={formData.has_agenda} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
                             </div>
+                            <div className="text-sm leading-6">
+                                <label htmlFor="has_agenda" className="font-medium text-gray-900">Profissional de Atendimento (tem agenda)</label>
+                            </div>
+                        </div>
+                    </div>
                      <div className="sm:col-span-2">
                         <label htmlFor="unit_id" className="block text-sm font-medium leading-6 text-gray-900">Unidade</label>
                         <select 

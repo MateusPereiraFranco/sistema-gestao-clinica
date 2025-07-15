@@ -48,7 +48,7 @@ export default function WaitingListPage() {
             if (!user) return;
             try {
                 const response = await api.get('/users');
-                const profList = response.data.filter((u: User) => u.profile === 'normal');
+                const profList = response.data.filter((u: User) => u.has_agenda && u.is_active);
                 setProfessionals(profList);
                 
                 if (user.profile === 'normal') {

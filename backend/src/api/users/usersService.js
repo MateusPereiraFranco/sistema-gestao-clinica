@@ -22,9 +22,6 @@ exports.getAllUsers = async (filters, requestingUser) => {
     if (requestingUser.profile === 'master' || requestingUser.profile === 'normal') {
         filters.unitId = requestingUser.unit_id;
     }
-    if (!filters.is_active) {
-        filters.is_active = true;
-    }
     return userModel.findAll(filters);
 };
 

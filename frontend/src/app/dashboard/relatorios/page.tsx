@@ -2,7 +2,7 @@
 
 import Header from "@/components/layout/Header";
 import ReportFilters from "@/components/reports/ReportFilters";
-import GroupedReportTable from "@/components/reports/GroupedReportTable"; // <-- Importar novo componente
+import GroupedReportTable from "@/components/reports/GroupedReportTable";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useFilterStore } from "@/stores/useFilterStore";
 import { User } from "@/types";

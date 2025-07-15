@@ -23,7 +23,6 @@ exports.getMe = async (req, res, next) => {
 exports.updatePassword = async (req, res, next) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        // O ID do utilizador é obtido do token (req.user), garantindo que ele só pode alterar a sua própria senha.
         const data = await authService.updatePassword(req.user.user_id, currentPassword, newPassword);
         res.status(200).json(data);
     } catch (error) {

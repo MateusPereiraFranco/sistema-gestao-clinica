@@ -28,7 +28,7 @@ exports.findAllActive = async () => {
 
 // Modificado para incluir o nome da especialidade através de um JOIN
 exports.findAll = async (filters = {}) => {
-    const { profile, unitId, name, specialtyId, forScheduling, activeOnly } = filters;
+    const { profile, unitId, name, specialtyId, has_agenda, is_active } = filters;
     let query = `
         SELECT u.user_id, u.name, u.email, u.profile, u.has_agenda, u.is_active, s.name as specialty_name, un.name as unit_name
         FROM users u
@@ -55,10 +55,10 @@ exports.findAll = async (filters = {}) => {
         query += ` AND u.profile = $${paramIndex++}`;
         params.push(profile);
     }
-    if (forScheduling) {
+    if (has_agenda) {
         query += ` AND u.has_agenda = TRUE`;
     }
-    if (activeOnly) {
+    if (is_active) {
         query += ` AND u.is_active = TRUE`;
     }
 

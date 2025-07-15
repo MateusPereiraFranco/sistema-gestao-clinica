@@ -44,7 +44,7 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {list.map(item => {
-                        const canAttend = user?.profile === 'master' || user?.user_id === item.professional_id;
+                        const canAttend = user?.user_id === item.professional_id;
                         return (
                             <tr key={item.appointment_id}>
                                 <td className="px-6 py-4">

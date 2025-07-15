@@ -85,7 +85,7 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
                 
                 if (appointment) {
                     const vinculoStyle = getVinculoStyle(appointment.vinculo);
-                    const canAttend = user?.profile === 'master' || user?.user_id === appointment.professional_id;
+                    const canAttend = user?.user_id === appointment.professional_id;
                     const isExpanded = expandedObservationId === appointment.appointment_id;
                     
                     return (

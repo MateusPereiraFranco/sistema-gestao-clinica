@@ -1,7 +1,7 @@
 const db = require('../../config/db');
 
 exports.getGroupedServicesSummary = async (filters) => {
-    const { startDate, endDate, professionalId, unitId, is_active, has_agenda } = filters;
+    const { startDate, endDate, professionalId, unitId, is_active } = filters;
 
     let query = `
         SELECT
