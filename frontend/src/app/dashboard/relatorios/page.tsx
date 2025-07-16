@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 export default function RelatoriosPage() {
     const { user } = useAuthStore();
-    const { reportProfessional, reportStartDate, reportEndDate, setReportProfessional } = useFilterStore();
+    const { reportProfessional, reportStartDate, reportEndDate, setReportProfessional, includeInactive } = useFilterStore();
     
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [reportData, setReportData] = useState([]);
@@ -20,12 +20,12 @@ export default function RelatoriosPage() {
     const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
-        api.get('/users').then(res => {
-            const profList = res.data.filter((u: User) => u.has_agenda && u.is_active);
+        api.get('/users', {params: {is_active: !includeInactive}}).then(res => {
+            const profList = res.data.filter((u: User) => u.has_agenda);
             setProfessionals(profList);
             if (user?.profile === 'normal') setReportProfessional(user.user_id);
         });
-    }, [user, setReportProfessional]);
+    }, [user, setReportProfessional, includeInactive]);
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -35,6 +35,7 @@ export default function RelatoriosPage() {
                 professionalId: reportProfessional,
                 startDate: reportStartDate,
                 endDate: reportEndDate,
+                includeInactive: includeInactive
             };
             const response = await api.get('/reports/services-summary', { params });
             setReportData(response.data);

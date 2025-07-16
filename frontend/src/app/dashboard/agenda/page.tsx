@@ -14,7 +14,7 @@ import { useFilterStore } from "@/stores/useFilterStore";
 
 export default function AgendaPage() {
     const { user } = useAuthStore();
-    const { agendaProfessional, setAgendaProfessional, agendaDate } = useFilterStore();
+    const { agendaProfessional, setAgendaProfessional, agendaDate, includeInactive } = useFilterStore();
     
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -31,7 +31,7 @@ export default function AgendaPage() {
         setIsLoading(true);
         try {
             const response = await api.get('/appointments', { 
-                params: { professionalId: agendaProfessional, date: agendaDate } 
+                params: { professionalId: agendaProfessional, date: agendaDate, includeInactive: includeInactive } 
             });
             setAppointments(response.data);
         } catch (error) {
@@ -39,15 +39,15 @@ export default function AgendaPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [agendaProfessional, agendaDate, isFetchingProfessionals]);
+    }, [agendaProfessional, agendaDate, isFetchingProfessionals, includeInactive]);
 
     useEffect(() => {
         const fetchProfessionalsAndSetDefaults = async () => {
             if (!user) return;
             setIsFetchingProfessionals(true);
             try {
-                const response = await api.get('/users');
-                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true && u.is_active === true);
+                const response = await api.get('/users', {params: {is_active: !includeInactive}});
+                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true);
                 setProfessionals(professionalList);
                 
                 const currentProfessional = useFilterStore.getState().agendaProfessional;
@@ -65,7 +65,7 @@ export default function AgendaPage() {
             }
         };
         fetchProfessionalsAndSetDefaults();
-    }, [user, setAgendaProfessional]);
+    }, [user, setAgendaProfessional, includeInactive]);
 
     useEffect(() => {
         fetchAgendaData();

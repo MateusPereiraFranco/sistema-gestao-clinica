@@ -31,8 +31,6 @@ exports.updatePassword = async (req, res, next) => {
 };
 
 exports.forgotPassword = async (req, res, next) => {
-
-    console.log('Email for password reset:');
     try {
         const { email } = req.body;
         const result = await authService.requestPasswordReset(email);

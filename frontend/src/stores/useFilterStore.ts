@@ -29,6 +29,9 @@ interface FilterState {
   setReportProfessional: (id: string) => void;
   setReportStartDate: (date: string) => void;
   setReportEndDate: (date: string) => void;
+
+  includeInactive: boolean;
+  setIncludeInactive: (value: boolean) => void;
 }
 
 export const useFilterStore = create<FilterState>()(
@@ -63,6 +66,9 @@ export const useFilterStore = create<FilterState>()(
       setReportProfessional: (id) => set({ reportProfessional: id }),
       setReportStartDate: (date) => set({ reportStartDate: date }),
       setReportEndDate: (date) => set({ reportEndDate: date }),
+
+      includeInactive: false, // Por defeito, não mostra os inativos.
+      setIncludeInactive: (value) => set({ includeInactive: value }),
     }),
     {
       name: 'app-filter-storage',

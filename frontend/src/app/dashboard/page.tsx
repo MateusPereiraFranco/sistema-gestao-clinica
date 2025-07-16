@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
     const { user } = useAuthStore();
-    const { dashboardProfessional, setDashboardProfessional, dashboardPeriod, dashboardDate } = useFilterStore();
+    const { dashboardProfessional, setDashboardProfessional, dashboardPeriod, dashboardDate, includeInactive } = useFilterStore();
     const router = useRouter();
 
     const [queue, setQueue] = useState<Appointment[]>([]);
@@ -34,6 +34,7 @@ export default function DashboardPage() {
             if (dashboardPeriod !== 'todos') {
                 params.period = dashboardPeriod;
             }
+            params.includeInactive = includeInactive;
 
             const response = await api.get('/appointments', { params });
             setQueue(response.data);
@@ -42,7 +43,7 @@ export default function DashboardPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [dashboardProfessional, dashboardPeriod, dashboardDate]);
+    }, [dashboardProfessional, dashboardPeriod, dashboardDate, includeInactive]);
 
     const handleStartService = async (appointmentId: string) => {
         const toastId = toast.loading("A iniciar atendimento...");
@@ -61,8 +62,8 @@ export default function DashboardPage() {
         const fetchProfessionals = async () => {
             if (!user) return;
             try {
-                const response = await api.get('/users');
-                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true && u.is_active === true);
+                const response = await api.get('/users', {params: {is_active: !includeInactive}});
+                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true);
                 setProfessionals(professionalList);
                 
                 if (user.profile === 'normal') {
@@ -71,7 +72,7 @@ export default function DashboardPage() {
             } catch (error) { console.error(error); }
         };
         fetchProfessionals();
-    }, [user, setDashboardProfessional]);
+    }, [user, setDashboardProfessional, includeInactive]);
 
     useEffect(() => {
         fetchWaitingQueue();

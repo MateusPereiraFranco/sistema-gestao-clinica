@@ -1,7 +1,7 @@
 'use client';
 
 import api from '@/services/api';
-import { Patient, User, Appointment } from '@/types';
+import { Patient, User, Appointment, PatientVinculo } from '@/types';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -13,6 +13,7 @@ interface AddToWaitingListModalProps {
 }
 
 export default function AddToWaitingListModal({ patient, onClose, onPatientAdded }: AddToWaitingListModalProps) {
+    const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [requestDate, setRequestDate] = useState(new Date().toISOString().split('T')[0]);
@@ -29,8 +30,8 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
     }, [patient]);
 
     const handleConfirm = async () => {
-        if (!selectedProfessional || !patient) {
-            toast.error("Selecione um paciente e um profissional.");
+        if (!selectedProfessional || !patient || vinculo === 'nenhum') {
+            toast.error("Selecione um paciente, profissional e um vinculo.");
             return;
         }
 
@@ -43,6 +44,7 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                 params: {
                     patientId: patient.patient_id,
                     professionalId: selectedProfessional,
+                    vinculo: vinculo
                 }
             });
 
@@ -63,6 +65,7 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
             await api.post('/appointments/waiting-list', {
                 patient_id: patient.patient_id,
                 professional_id: selectedProfessional,
+                vinculo: vinculo,
                 request_date: requestDate,
             });
             toast.success(`${patient.name} adicionado à lista de espera.`, { id: toastId });
@@ -96,6 +99,16 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                             {professionals.map(p => <option key={p.user_id} value={p.user_id}>{p.name}</option>)}
                         </select>
                     </div>
+                    <div>
+                        <label htmlFor="vinculo_agendamento" className="block text-sm font-medium text-gray-700 mb-1">Vínculo do Atendimento</label>
+                        <select id="vinculo_agendamento" value={vinculo} onChange={(e) => setVinculo(e.target.value as PatientVinculo)}
+                            className="w-full py-2 px-3 border border-gray-300 rounded-md">
+                            <option value="nenhum">Nenhum</option>
+                            <option value="saude">Saúde</option>
+                            <option value="educação">Educação</option>
+                            <option value="AMA">AMA</option>
+                        </select>
+                        </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Data da Solicitação</label>
                         <input type="date" value={requestDate} onChange={e => setRequestDate(e.target.value)} className="mt-1 w-full p-2 border rounded-md"/>

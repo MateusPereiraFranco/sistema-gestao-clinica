@@ -22,6 +22,9 @@ export default function GerirUsuariosPage() {
 
     const fetchUsers = useCallback(async (filters = {}) => {
         setIsLoading(true);
+        if(filters.is_active === undefined){
+            filters.is_active = true;
+        }
         try {
             const response = await api.get('/users', { params: filters });
             setUsers(response.data);

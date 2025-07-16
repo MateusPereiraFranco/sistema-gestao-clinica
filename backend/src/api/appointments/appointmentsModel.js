@@ -23,7 +23,7 @@ exports.findByProfessionalAndDate = async (professionalId, date) => {
 };
 
 exports.findAppointments = async (filters) => {
-    const { professionalId, date, statusArray, period, unit_id, startDate, endDate, is_active } = filters;
+    const { professionalId, date, statusArray, period, unit_id, startDate, endDate, includeInactive } = filters;
     let query = `
         SELECT
             apt.appointment_id, apt.professional_id, apt.appointment_datetime,
@@ -67,9 +67,9 @@ exports.findAppointments = async (filters) => {
     } else if (period === 'tarde') {
         query += ` AND to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24MI') >= '1200'`;
     }
-    if (is_active !== undefined) {
+    if (!includeInactive) {
         query += ` AND prof.is_active = $${paramIndex++}`;
-        params.push(is_active);
+        params.push('true');
     }
 
     query += ' ORDER BY apt.appointment_datetime ASC;';

@@ -12,7 +12,7 @@ exports.login = async (email, password) => {
         error.statusCode = 401;
         throw error;
     }
-    const token = jwt.sign({ id: user.user_id, profile: user.profile }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user.user_id, profile: user.profile }, process.env.JWT_SECRET, { expiresIn: '8h' });
     delete user.password_hash;
     return { token, user };
 };
@@ -47,7 +47,7 @@ exports.updatePassword = async (userId, currentPassword, newPassword) => {
     await userModel.updatePassword(user.user_id, hashedNewPassword);
 
     // 4. Gera um novo token.
-    const token = jwt.sign({ id: user.user_id, profile: user.profile }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user.user_id, profile: user.profile }, process.env.JWT_SECRET, { expiresIn: '8h' });
     return { token };
 };
 

@@ -1,18 +1,18 @@
 const { Router } = require('express');
 const authController = require('./authController');
 const { protect } = require('../../middlewares/authMiddleware');
+const { loginLimiter } = require('../../config/rateLimiter');
 
 const router = Router();
 
-router.post('/login', authController.login);
-router.patch('/update-password', authController.updatePassword);
+router.post('/login', loginLimiter, authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 
-// Rotas que exigem que o utilizador esteja autenticado
 router.use(protect);
 
 router.get('/me', authController.getMe);
+router.patch('/update-password', authController.updatePassword);
 
 
 module.exports = router;

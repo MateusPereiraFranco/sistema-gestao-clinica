@@ -33,6 +33,15 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
         setFilters(prev => ({ ...prev, [name]: maskedValue }));
     };
 
+    const hanleClearFilters = () => {
+        setFilters({
+            name: '',
+            mother_name: '',
+            cpf: '',
+            cns: ''
+        });
+    }
+
     useEffect(() => {
         const fetchSuggestions = async () => {
             if (debouncedName.length > 2) {
@@ -77,7 +86,7 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
 
     return (
         <div className="p-6 bg-white rounded-lg shadow mb-6">
-            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 items-end">
                 <div className="lg:col-span-2 relative">
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome do Paciente</label>
                     <input type="text" name="name" id="name" value={filters.name} onChange={handleFilterChange} 
@@ -117,6 +126,12 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
                 >
                     <Search className="w-5 h-5 mr-2"/>
                     Buscar
+                </button>
+                <button
+                    onClick={hanleClearFilters}
+                    className="flex items-center justify-center w-full bg-indigo-700 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700"
+                >
+                    Limpar Filtro
                 </button>
             </form>
         </div>

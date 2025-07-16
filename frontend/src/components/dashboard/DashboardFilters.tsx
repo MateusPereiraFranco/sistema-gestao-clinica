@@ -9,7 +9,7 @@ interface DashboardFiltersProps {
 }
 
 export default function DashboardFilters({ professionals }: DashboardFiltersProps) {
-    const { dashboardProfessional, setDashboardProfessional, dashboardPeriod, setDashboardPeriod, dashboardDate, setDashboardDate, } = useFilterStore();
+    const { dashboardProfessional, setDashboardProfessional, dashboardPeriod, setDashboardPeriod, dashboardDate, setDashboardDate, includeInactive, setIncludeInactive  } = useFilterStore();
     const handleDateChange = (days: number) => {
         const currentDate = new Date(`${dashboardDate}T12:00:00Z`);
         currentDate.setDate(currentDate.getDate() + days);
@@ -53,6 +53,12 @@ export default function DashboardFilters({ professionals }: DashboardFiltersProp
                     className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
                 <button onClick={() => handleDateChange(1)} className="p-2 rounded-md hover:bg-gray-200"><ChevronRight size={20} /></button>
+            </div>
+            <div className="flex items-center gap-2">
+                <input type="checkbox" id="include_inactive_dashboard" checked={includeInactive}
+                    onChange={(e) => setIncludeInactive(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"/>
+                <label htmlFor="include_inactive_dashboard" className="text-sm text-gray-700">Incluir profissionais inativos</label>
             </div>
         </div>
     );

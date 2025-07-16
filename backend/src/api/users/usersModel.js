@@ -92,7 +92,7 @@ exports.findById = async (id) => {
 exports.findByIdForEdit = async (id) => {
     const query = `
         SELECT 
-            user_id, name, email, profile, unit_id, specialty_id, is_active 
+            user_id, name, email, profile, unit_id, specialty_id, is_active , has_agenda
         FROM users 
         WHERE user_id = $1;
     `;

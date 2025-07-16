@@ -29,7 +29,7 @@ export default function UserForm({ userToEdit }: UserFormProps) {
         unit_id: userToEdit?.unit_id || loggedInUser?.unit_id || '',
         specialty_id: userToEdit?.specialty_id || '',
         is_active: userToEdit?.is_active ?? true,
-        has_agenda: userToEdit?.has_agenda ?? true,
+        has_agenda: userToEdit?.has_agenda,
     });
 
     useEffect(() => {
@@ -55,7 +55,6 @@ export default function UserForm({ userToEdit }: UserFormProps) {
         setIsLoading(true);
         try {
             if (isEditing) {
-                // Remove a palavra-passe do objeto se não for preenchida
                 const { password, ...updateData } = formData;
                 const dataToSend = password ? formData : updateData;
                 await api.put(`/users/${userToEdit.user_id}`, dataToSend);
@@ -71,7 +70,6 @@ export default function UserForm({ userToEdit }: UserFormProps) {
             setIsLoading(false);
         }
     };
-    console.log(formData);
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
             {/* Secção de Detalhes do Utilizador */}
@@ -150,7 +148,8 @@ export default function UserForm({ userToEdit }: UserFormProps) {
             <div className="mt-8 flex items-center justify-end gap-x-6 border-t pt-6">
                 <button type="button" onClick={() => router.back()} className="text-sm font-semibold leading-6 text-gray-900">Cancelar</button>
                 <button type="submit" disabled={isLoading} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-indigo-400">
-                    {isLoading ? 'A criar...' : 'Criar Utilizador'}
+                    {isLoading ? 'A criar...' : 
+                    isEditing ? 'Editar Utilizador' : 'Criar Utilizador'}
                 </button>
             </div>
         </form>

@@ -1,8 +1,7 @@
 const db = require('../../config/db');
 
 exports.getGroupedServicesSummary = async (filters) => {
-    const { startDate, endDate, professionalId, unitId, is_active } = filters;
-
+    const { startDate, endDate, professionalId, unitId, includeInactive } = filters;
     let query = `
         SELECT
             u.user_id,
@@ -38,9 +37,8 @@ exports.getGroupedServicesSummary = async (filters) => {
         whereConditions.push(`u.unit_id = $${paramIndex++}`);
         params.push(unitId);
     }
-    if (is_active !== undefined) {
-        whereConditions.push(`u.is_active = $${paramIndex++}`);
-        params.push(is_active);
+    if (includeInactive === 'false') {
+        whereConditions.push('u.is_active = TRUE');
     }
 
     query += ` WHERE ${whereConditions.join(' AND ')}`;

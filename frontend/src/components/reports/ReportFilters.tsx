@@ -16,7 +16,8 @@ export default function ReportFilters({ professionals, onSearch, isLoading }: Re
     const {
         reportProfessional, setReportProfessional,
         reportStartDate, setReportStartDate,
-        reportEndDate, setReportEndDate
+        reportEndDate, setReportEndDate,
+        includeInactive, setIncludeInactive
     } = useFilterStore();
     return (
         <div className="p-6 bg-white rounded-lg shadow-sm mb-6">
@@ -41,6 +42,12 @@ export default function ReportFilters({ professionals, onSearch, isLoading }: Re
                     <Search className="w-5 h-5 mr-2"/>
                     {isLoading ? 'A gerar...' : 'Gerar Relatório'}
                 </button>
+                <div className="flex items-center gap-2">
+                <input type="checkbox" id="include_inactive_dashboard" checked={includeInactive}
+                    onChange={(e) => setIncludeInactive(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"/>
+                <label htmlFor="include_inactive_dashboard" className="text-sm text-gray-700">Incluir profissionais inativos</label>
+            </div>
             </div>
         </div>
     );

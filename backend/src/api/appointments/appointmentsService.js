@@ -22,9 +22,6 @@ exports.getAppointments = async (filters, user) => {
         if (professional.unit_id !== user.unit_id) {
             throw new Error("Não autorizado a ver a agenda deste profissional.");
         }
-        if (!filters.is_active) {
-            filters.is_active = true;
-        }
     }
     return appointmentModel.findAppointments(filters);
 };
@@ -77,7 +74,7 @@ exports.createAppointment = async (appointmentData) => {
 };
 
 exports.addToWaitingList = async (data, loggedInUserId) => {
-    const { patient_id, professional_id, request_date } = data;
+    const { patient_id, professional_id, vinculo, request_date } = data;
     if (!patient_id || !professional_id || !request_date) {
         throw new Error("Dados insuficientes para adicionar à lista de espera.");
     }
@@ -95,6 +92,7 @@ exports.addToWaitingList = async (data, loggedInUserId) => {
     const appointmentData = {
         patient_id,
         professional_id,
+        vinculo,
         unit_id: professional.unit_id,
         appointment_datetime,
         service_type: specialtyName,

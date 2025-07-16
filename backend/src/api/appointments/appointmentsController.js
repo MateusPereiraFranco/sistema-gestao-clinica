@@ -2,7 +2,7 @@ const appointmentService = require('./appointmentsService');
 
 exports.getAppointments = async (req, res, next) => {
     try {
-        const { professionalId, date, period, startDate, endDate } = req.query;
+        const { professionalId, date, period, startDate, endDate, includeInactive } = req.query;
         const status = req.query['status[]'] || req.query.status;
 
         const filters = {
@@ -11,7 +11,8 @@ exports.getAppointments = async (req, res, next) => {
             statusArray: Array.isArray(status) ? status : (status ? [status] : []),
             period,
             startDate,
-            endDate
+            endDate,
+            includeInactive: includeInactive === 'true'
         };
 
         const appointments = await appointmentService.getAppointments(filters, req.user);

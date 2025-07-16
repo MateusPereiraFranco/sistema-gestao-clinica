@@ -10,6 +10,7 @@ interface AgendaFiltersProps {
 
 export default function AgendaFilters({ professionals }: AgendaFiltersProps) {
     const { 
+        includeInactive, setIncludeInactive,
         agendaProfessional, setAgendaProfessional, 
         agendaDate, setAgendaDate, 
     } = useFilterStore();
@@ -47,6 +48,12 @@ export default function AgendaFilters({ professionals }: AgendaFiltersProps) {
                     className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
                 <button onClick={() => handleDateChange(1)} className="p-2 rounded-md hover:bg-gray-200"><ChevronRight size={20} /></button>
+            </div>
+            <div className="flex items-center gap-2">
+                <input type="checkbox" id="include_inactive_agenda" checked={includeInactive}
+                    onChange={(e) => setIncludeInactive(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"/>
+                <label htmlFor="include_inactive_agenda" className="text-sm text-gray-700">Incluir inativos</label>
             </div>
         </div>
     );
