@@ -19,14 +19,14 @@ exports.getGroupedSummaryReport = async (filters, user) => {
                 professional_name: item.professional_name,
                 specialty_name: item.specialty_name,
                 summary: { saude: 0, educação: 0, AMA: 0, nenhum: 0 },
-                total: 0
+                service_count: 0
             });
         }
 
         const professional = professionalMap.get(item.user_id);
         if (item.vinculo && item.service_count > 0) {
             professional.summary[item.vinculo] = item.service_count;
-            professional.total += item.service_count;
+            professional.service_count += item.service_count;
         }
     }
 

@@ -2,12 +2,14 @@
 
 import Header from "@/components/layout/Header";
 import api from "@/services/api";
-import { Appointment, AppointmentStatus } from "@/types";
+import { Appointment, AppointmentStatus, User } from "@/types";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { Eye, Search } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { useFilterStore } from "@/stores/useFilterStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface HistoryData {
     patient_id: string;
@@ -31,6 +33,9 @@ const StatusBadge = ({ status }: { status: AppointmentStatus }) => {
 };
 
 export default function ProntuarioPage() {
+    const { user } = useAuthStore();
+    const [professionals, setProfessionals] = useState<User[]>([]);
+    const { dashboardProfessional, setDashboardProfessional} = useFilterStore();
     const params = useParams();
     const patientId = params.patientId as string;
 
@@ -50,7 +55,7 @@ export default function ProntuarioPage() {
         setError(null);
         try {
             const response = await api.get(`/patients/${patientId}/history`, {
-                params: { startDate, endDate }
+                params: { startDate, endDate, professional_id: dashboardProfessional }
             });
             setPatientName(response.data.name);
             setHistory(response.data.history);
@@ -60,11 +65,27 @@ export default function ProntuarioPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [patientId, startDate, endDate]);
+    }, [patientId, startDate, endDate, dashboardProfessional]);
 
     useEffect(() => {
         fetchHistory();
-    }, [fetchHistory]);
+    }, [fetchHistory, dashboardProfessional]);
+
+    useEffect(() => {
+        const fetchProfessionals = async () => {
+            if (!user) return;
+            try {
+                const response = await api.get('/users', {params: {is_active: true, professional_id: dashboardProfessional}});
+                const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true);
+                setProfessionals(professionalList);
+                
+                if (user.profile === 'normal') {
+                    setDashboardProfessional(user.user_id);
+                }
+            } catch (error) { console.error(error); }
+        };
+        fetchProfessionals();
+    }, [user, setDashboardProfessional]);
 
     return (
         <>
@@ -72,7 +93,7 @@ export default function ProntuarioPage() {
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Componente de Filtros */}
                 <div className="p-4 bg-white rounded-lg shadow-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
                             <label htmlFor="start_date_history" className="block text-sm font-medium text-gray-700">De</label>
                             <input type="date" id="start_date_history" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md"/>
@@ -80,6 +101,20 @@ export default function ProntuarioPage() {
                         <div>
                             <label htmlFor="end_date_history" className="block text-sm font-medium text-gray-700">Até</label>
                             <input type="date" id="end_date_history" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md"/>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                            <label htmlFor="professional_dashboard_filter" className="text-sm font-medium text-gray-700">Profissional:</label>
+                            <select
+                                id="professional_dashboard_filter"
+                                value={dashboardProfessional}
+                                onChange={(e) => setDashboardProfessional(e.target.value)}
+                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            >
+                                <option value="all">Todos os Profissionais</option>
+                                {professionals.map(pro => (
+                                    <option key={pro.user_id} value={pro.user_id}>{pro.name}</option>
+                                ))}
+                            </select>
                         </div>
                         <button onClick={fetchHistory} disabled={isLoading} className="flex items-center justify-center w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm font-medium hover:bg-indigo-700 disabled:bg-indigo-400">
                             <Search className="w-5 h-5 mr-2"/>

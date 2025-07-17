@@ -25,7 +25,9 @@ router.patch('/:id/cancel', restrictTo('admin', 'master'), appointmentController
 // Rotas para gerir o ciclo de vida
 router.patch('/:id/check-in', appointmentController.checkIn);
 router.patch('/:id/mark-as-missed', appointmentController.markAsMissed);
-// NOVA ROTA: Rota para o profissional iniciar o atendimento.
+
 router.patch('/:id/start-service', appointmentController.startService);
+
+router.get('/detailed-report', appointmentController.getDetailedReportAppointments);
 
 module.exports = router;

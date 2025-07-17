@@ -154,7 +154,7 @@ exports.remove = async (id) => {
 };
 
 // NOVA FUNÇÃO: Busca o histórico completo de atendimentos de um paciente.
-exports.findHistoryByPatientId = async (patientId, startDate, endDate) => {
+exports.findHistoryByPatientId = async (patientId, startDate, endDate, professional_id) => {
     let query = `
         SELECT
             apt.appointment_id,
@@ -173,6 +173,10 @@ exports.findHistoryByPatientId = async (patientId, startDate, endDate) => {
     if (startDate && endDate) {
         query += ` AND apt.appointment_datetime::date BETWEEN $${paramIndex++} AND $${paramIndex++}`;
         params.push(startDate, endDate);
+    }
+    if (professional_id !== 'all') {
+        query += ` AND apt.professional_id = $${paramIndex++}`;
+        params.push(professional_id);
     }
 
     query += ' ORDER BY apt.appointment_datetime DESC;';

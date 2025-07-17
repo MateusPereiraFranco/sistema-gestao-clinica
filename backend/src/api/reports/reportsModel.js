@@ -8,7 +8,7 @@ exports.getGroupedServicesSummary = async (filters) => {
             u.name as professional_name,
             u.has_agenda,
             s.name as specialty_name,
-            apt.vinculo,
+            COALESCE(apt.vinculo, 'nenhum') as vinculo, -- CORREÇÃO AQUI: Garante que vinculo não seja NULL
             COUNT(apt.appointment_id)::integer as service_count
         FROM
             users u

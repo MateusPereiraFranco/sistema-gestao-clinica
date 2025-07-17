@@ -1,4 +1,5 @@
 const appointmentService = require('./appointmentsService');
+const appointmentModel = require('./appointmentsModel');
 
 exports.getAppointments = async (req, res, next) => {
     try {
@@ -152,4 +153,29 @@ exports.cancelAppointment = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+};
+
+exports.getDetailedReportAppointments = async (req, res, next) => {
+    const { professionalId, date, period, startDate, endDate, includeInactive } = req.query;
+    const status = req.query['statusArray[]'] || req.query.statusArray;
+
+    const filters = {
+        professionalId,
+        date,
+        statusArray: Array.isArray(status) ? status : (status ? [status] : []),
+        period,
+        startDate,
+        endDate,
+        includeInactive: includeInactive === 'true'
+    };
+
+    const detailedAppointments = await appointmentModel.findAppointments(filters, req.user);
+
+    res.status(200).json({
+        status: 'success',
+        results: detailedAppointments.length,
+        data: {
+            appointments: detailedAppointments
+        }
+    });
 };

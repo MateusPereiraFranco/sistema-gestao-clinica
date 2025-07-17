@@ -122,8 +122,8 @@ exports.getPatientHistory = async (patientId, filters) => {
         error.statusCode = 404;
         throw error;
     }
-    const { startDate, endDate } = filters;
-    const history = await patientModel.findHistoryByPatientId(patientId, startDate, endDate);
+    const { startDate, endDate, professional_id } = filters;
+    const history = await patientModel.findHistoryByPatientId(patientId, startDate, endDate, professional_id);
 
     // Retorna os dados do paciente e o seu histórico.
     return {
