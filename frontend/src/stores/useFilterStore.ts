@@ -1,3 +1,4 @@
+import { AppointmentStatus } from '@/types';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -24,9 +25,11 @@ interface FilterState {
   resetDatesToToday: () => void;
 
   reportProfessional: string;
+  reportStatus: AppointmentStatus;
   reportStartDate: string;
   reportEndDate: string;
   setReportProfessional: (id: string) => void;
+  setReportStatus: (status: AppointmentStatus) => void;
   setReportStartDate: (date: string) => void;
   setReportEndDate: (date: string) => void;
 
@@ -61,9 +64,11 @@ export const useFilterStore = create<FilterState>()(
         agendaDate: new Date().toISOString().split('T')[0],
       }),
       reportProfessional: 'all',
+      reportStatus: 'completed',
       reportStartDate: new Date().toISOString().split('T')[0],
       reportEndDate: new Date().toISOString().split('T')[0],
       setReportProfessional: (id) => set({ reportProfessional: id }),
+      setReportStatus: (status) => set({ reportStatus: status }),
       setReportStartDate: (date) => set({ reportStartDate: date }),
       setReportEndDate: (date) => set({ reportEndDate: date }),
 

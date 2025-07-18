@@ -66,7 +66,7 @@ export default function DashboardPage() {
                 const professionalList: User[] = response.data.filter((u: User) => u.has_agenda === true);
                 setProfessionals(professionalList);
                 
-                if (user.profile === 'normal') {
+                if (user.has_agenda === true) {
                     setDashboardProfessional(user.user_id);
                 }
             } catch (error) { console.error(error); }

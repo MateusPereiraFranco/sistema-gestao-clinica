@@ -5,49 +5,59 @@ import ReportFilters from "@/components/reports/ReportFilters";
 import GroupedReportTable from "@/components/reports/GroupedReportTable";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useFilterStore } from "@/stores/useFilterStore";
-import { User, PatientVinculo } from "@/types"; // Importando sua interface User e PatientVinculo
+import { User, PatientVinculo, AppointmentStatus } from "@/types"; // Importe AppointmentStatus
 import api from "@/services/api";
 import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 
-// Interface para o resumo do relatório vindo do backend (REVISADA COM BASE NO SEU LOG)
+// ... (suas interfaces ReportSummary e TransformedReportData permanecem as mesmas)
 interface ReportSummary {
-  user_id: string;
-  professional_name: string;
-  has_agenda: boolean; // Adicionado com base no seu log
-  specialty_name: string;
-  summary: {
-    saude: number;
-    'educação': number; // A chave real com 'ç' vinda do backend
-    AMA: number;
-    nenhum: number;
-  };
-  vinculo?: PatientVinculo; // Tornando opcional, pois parece redundante se o summary já está presente
-  service_count: number; // Parece ser o total para o profissional, ou redundante se o summary for a fonte principal
+    user_id: string;
+    professional_name: string;
+    has_agenda: boolean;
+    specialty_name: string;
+    summary: {
+        saude: number;
+        'educação': number;
+        AMA: number;
+        nenhum: number;
+    };
+    vinculo?: PatientVinculo;
+    service_count: number;
 }
 
-// Interface para os dados do relatório que o GroupedReportTable espera (permanece a mesma)
 interface TransformedReportData {
     user_id: string;
     professional_name: string;
     specialty_name: string;
     summary: {
         saude: number;
-        educacao: number; // Chave sem 'ç' para o frontend
+        educacao: number;
         AMA: number;
         nenhum: number;
     };
     total: number;
 }
 
+
 export default function RelatoriosPage() {
     const { user, token } = useAuthStore();
-    const { reportProfessional, reportStartDate, reportEndDate, setReportProfessional, includeInactive } = useFilterStore();
+    // 1. Obtenha o 'reportStatus' da sua store
+    const { 
+        reportProfessional, 
+        reportStartDate, 
+        reportEndDate, 
+        setReportProfessional, 
+        includeInactive,
+        reportStatus
+    } = useFilterStore();
     
     const [professionals, setProfessionals] = useState<User[]>([]);
-    const [rawReportData, setRawReportData] = useState<ReportSummary[]>([]); // Dados brutos do backend
+    const [rawReportData, setRawReportData] = useState<ReportSummary[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+
+    const availableStatuses: AppointmentStatus[] = ['completed', 'in_progress', 'justified_absence', 'unjustified_absence','waiting','scheduled', 'canceled'];
 
     useEffect(() => {
         if (token) {
@@ -73,7 +83,8 @@ export default function RelatoriosPage() {
                 professionalId: reportProfessional,
                 startDate: reportStartDate,
                 endDate: reportEndDate,
-                includeInactive: includeInactive
+                includeInactive: includeInactive,
+                status: reportStatus
             };
             const response = await api.get('/reports/services-summary', { 
                 params,
@@ -92,45 +103,35 @@ export default function RelatoriosPage() {
         }
     };
 
-    // Função para transformar os dados do backend para o formato que o GroupedReportTable espera
+    // A função de transformação não precisa mudar, ela vai funcionar corretamente
     const transformedReportData = useMemo(() => {
-        console.log('--- rawReportData for Transformation ---', rawReportData); // Log dos dados brutos
-
+        // ... seu código de transformação aqui ...
+        // (sem alterações necessárias)
         const transformed: TransformedReportData[] = rawReportData.map(item => {
-            console.log('Processing item for direct transformation:', item);
-
-            // Garante que as contagens do summary são números
             const countSaude = Number(item.summary.saude) || 0;
-            // Acessa a chave com 'ç' e converte para número
             const countEducacao = Number(item.summary['educação']) || 0; 
             const countAMA = Number(item.summary.AMA) || 0;
             const countNenhum = Number(item.summary.nenhum) || 0;
-
-            // O total é a soma de todos os vínculos do summary
             const totalForProfessional = countSaude + countEducacao + countAMA + countNenhum;
-
-            const transformedItem: TransformedReportData = {
+            return {
                 user_id: item.user_id,
                 professional_name: item.professional_name,
                 specialty_name: item.specialty_name,
                 summary: {
                     saude: countSaude,
-                    educacao: countEducacao, // Atribui à chave sem 'ç'
+                    educacao: countEducacao,
                     AMA: countAMA,
                     nenhum: countNenhum,
                 },
                 total: totalForProfessional,
             };
-
-            console.log('Transformed item:', transformedItem);
-            return transformedItem;
         });
-
-        console.log('--- Final Transformed Report Data ---', transformed); // Log dos dados transformados finais
         return transformed;
     }, [rawReportData]);
 
     const formatDate = (dateString: string) => {
+        // ... seu código de formatação aqui ...
+        // (sem alterações necessárias)
         if (!dateString) return '';
         try {
             const date = new Date(dateString + 'T12:00:00Z');
@@ -145,7 +146,13 @@ export default function RelatoriosPage() {
         <>
             <Header title="Relatórios e Análises" />
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
-                <ReportFilters professionals={professionals} onSearch={handleSearch} isLoading={isLoading} />
+                {/* 3. Passe a lista de status para o componente ReportFilters */}
+                <ReportFilters 
+                    professionals={professionals} 
+                    status={availableStatuses}
+                    onSearch={handleSearch} 
+                    isLoading={isLoading} 
+                />
                 
                 {hasSearched && !isLoading && (
                     <GroupedReportTable 
@@ -156,7 +163,8 @@ export default function RelatoriosPage() {
                             endDate: reportEndDate,
                             professionalId: reportProfessional,
                             unitId: '',
-                            includeInactive: includeInactive
+                            includeInactive: includeInactive,
+                            status: reportStatus
                         }} 
                         token={token}
                     />
