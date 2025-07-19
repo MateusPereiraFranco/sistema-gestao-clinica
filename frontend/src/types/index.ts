@@ -4,6 +4,8 @@ export type AppointmentStatus = | 'scheduled' | 'waiting' | 'in_progress' | 'com
 export interface Unit {
     unit_id: string;
     name: string;
+    is_active?: boolean;
+    address?: string
 }
 
 export interface Specialty {

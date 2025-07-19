@@ -34,7 +34,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
     const [showConflictModal, setShowConflictModal] = useState(false);
     
     const { waitingListEntry } = useWaitingListCheck(selectedPatient?.patient_id, professionalId);
-    const { futureAppointment } = useFutureScheduleCheck(selectedPatient?.patient_id);
+    const { futureAppointment } = useFutureScheduleCheck(selectedPatient?.patient_id, professionalId);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -95,6 +95,10 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
     const handleConfirmAppointment = async () => {
         if (!selectedPatient) {
             toast.error("Por favor, selecione um paciente.");
+            return;
+        }
+        if (vinculo === 'nenhum') {
+            toast.error("Por favor, selecione um vínculo.");
             return;
         }
         // Passo 1: Verificar se há um agendamento futuro.

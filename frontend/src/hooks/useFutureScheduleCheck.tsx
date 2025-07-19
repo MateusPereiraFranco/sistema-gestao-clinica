@@ -4,14 +4,13 @@ import api from '@/services/api';
 import { Appointment } from '@/types';
 
 // Este hook verifica se um paciente já tem um agendamento futuro.
-export function useFutureScheduleCheck(patientId?: string) {
+export function useFutureScheduleCheck(patientId?: string, professional_id?: string) {
     const [futureAppointment, setFutureAppointment] = useState<Appointment | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
     useEffect(() => {
         if (patientId) {
             setIsLoading(true);
-            api.get('/appointments/check-future-schedule', { params: { patientId } })
+            api.get('/appointments/check-future-schedule', { params: { patientId, professional_id } })
                 .then(res => setFutureAppointment(res.data))
                 .catch(() => setFutureAppointment(null))
                 .finally(() => setIsLoading(false));

@@ -12,7 +12,6 @@ interface FutureScheduleConflictModalProps {
 
 export default function FutureScheduleConflictModal({ isOpen, onClose, onConfirm, entry }: FutureScheduleConflictModalProps) {
     if (!isOpen) return null;
-    {console.log("Entry:", entry);}
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg animate-fade-in-up">

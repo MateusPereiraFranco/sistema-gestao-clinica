@@ -28,7 +28,7 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
     useEffect(() => {
         if (patient) {
             api.get('/users').then(res => {
-                const professionalList = res.data.filter((u: User) => u.profile === 'normal');
+                const professionalList = res.data.filter((u: User) => u.has_agenda === true);
                 setProfessionals(professionalList);
                 if (professionalList.length > 0) setSelectedProfessional(professionalList[0].user_id);
             });
@@ -64,6 +64,10 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
     const handleConfirm = async () => {
         if (!selectedProfessional) {
             toast.error("Por favor, selecione um profissional.");
+            return;
+        }
+        if (vinculo === 'nenhum') {
+            toast.error("Por favor, selecione um vículo.");
             return;
         }
         // Se o paciente está na lista de espera, mostra o modal de conflito primeiro.

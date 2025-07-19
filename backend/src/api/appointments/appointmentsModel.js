@@ -95,7 +95,7 @@ exports.createReferrals = async (fromAppointmentId, professionalIds) => {
     await db.query(query, params);
 };
 
-exports.findFutureScheduledAppointment = async (patientId) => {
+exports.findFutureScheduledAppointment = async (patientId, professional_id) => {
     const query = `
         SELECT 
             appointment_id, 
@@ -103,14 +103,15 @@ exports.findFutureScheduledAppointment = async (patientId) => {
             to_char(appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as formatted_date
         FROM appointments 
         WHERE 
-            patient_id = $1 
+            patient_id = $1
+            AND professional_id = $2 
             AND status = 'scheduled' 
             AND appointment_datetime >= NOW()
         ORDER BY 
             appointment_datetime ASC
         LIMIT 1;
     `;
-    const { rows } = await db.query(query, [patientId]);
+    const { rows } = await db.query(query, [patientId, professional_id]);
     return rows[0];
 };
 
@@ -245,7 +246,7 @@ exports.findWaitingListEntry = async (patientId, professionalId) => {
 exports.updateFromWaitingListToScheduled = async (appointmentId, newDateTime) => {
     const query = `
         UPDATE appointments 
-        SET status = 'scheduled', appointment_datetime = $1, observations = 'Promovido da lista de espera.'
+        SET status = 'scheduled', appointment_datetime = $1
         WHERE appointment_id = $2
         RETURNING *;
     `;

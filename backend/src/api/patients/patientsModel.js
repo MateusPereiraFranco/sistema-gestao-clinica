@@ -162,6 +162,7 @@ exports.findHistoryByPatientId = async (patientId, startDate, endDate, professio
             to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') as time,
             apt.service_type,
             apt.status,
+            apt.observations,
             u.name as professional_name
         FROM appointments apt
         JOIN users u ON apt.professional_id = u.user_id

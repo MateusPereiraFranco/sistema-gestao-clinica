@@ -1,9 +1,9 @@
 const patientService = require('./patientsService');
+const auditLogModel = require('../auditLogs/auditLogModel');
 
 // O controller agora extrai os filtros dos query parameters da URL.
 exports.getAllPatients = async (req, res, next) => {
     try {
-        // Ex: /api/patients?name=João&cpf=123
         const filters = req.query;
         const patients = await patientService.getAllPatients(filters, req.user);
         res.status(200).json(patients);
@@ -26,6 +26,13 @@ exports.getPatientForEdit = async (req, res, next) => {
 exports.createPatient = async (req, res, next) => {
     try {
         const newPatient = await patientService.createPatient(req.body, req.user.user_id, req.user.unit_id);
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'CREATE_PATIENT',
+            target_entity: 'patients',
+            target_id: newPatient.appointment_id,
+            details: { ...newPatient }
+        });
         res.status(201).json(newPatient);
     } catch (error) {
         next(error);
@@ -42,7 +49,18 @@ exports.getPatientById = async (req, res, next) => {
 };
 exports.updatePatient = async (req, res, next) => {
     try {
+        const originalPatient = await appointmentModel.findById(req.params.id);
         const updatedPatient = await patientService.updatePatient(req.params.id, req.body, req.user);
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'UPDATE_PATIENT',
+            target_entity: 'patients',
+            target_id: req.params.id,
+            details: {
+                before: originalPatient,
+                after: updatedPatient
+            }
+        });
         res.status(200).json(updatedPatient);
     } catch (error) {
         next(error);
@@ -50,7 +68,18 @@ exports.updatePatient = async (req, res, next) => {
 };
 exports.deletePatient = async (req, res, next) => {
     try {
+        const patientToDelete = await patientModel.findById(req.params.id);
         await patientService.deletePatient(req.params.id);
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'DELETE_PATIENT',
+            target_entity: 'patients',
+            target_id: req.params.id,
+            details: {
+                deleted_patient_name: patientToDelete.name,
+                deleted_patient_cpf: patientToDelete.cpf
+            }
+        });
         res.status(204).send();
     } catch (error) {
         next(error);

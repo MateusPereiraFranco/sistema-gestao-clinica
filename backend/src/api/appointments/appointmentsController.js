@@ -1,5 +1,6 @@
 const appointmentService = require('./appointmentsService');
 const appointmentModel = require('./appointmentsModel');
+const auditLogModel = require('../auditLogs/auditLogModel');
 
 exports.getAppointments = async (req, res, next) => {
     try {
@@ -26,6 +27,13 @@ exports.getAppointments = async (req, res, next) => {
 exports.createAppointment = async (req, res, next) => {
     try {
         const newAppointment = await appointmentService.createAppointment(req.body, req.user);
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'CREATE_APPOINTMENT',
+            target_entity: 'appointments',
+            target_id: newAppointment.appointment_id,
+            details: { ...newAppointment }
+        });
         res.status(201).json(newAppointment);
     } catch (error) {
         next(error);
@@ -99,8 +107,8 @@ exports.getServiceDetails = async (req, res, next) => {
 
 exports.checkFutureSchedule = async (req, res, next) => {
     try {
-        const { patientId } = req.query;
-        const entry = await appointmentService.checkFutureSchedule(patientId);
+        const { patientId, professional_id } = req.query;
+        const entry = await appointmentService.checkFutureSchedule(patientId, professional_id);
         res.status(200).json(entry || null);
     } catch (error) {
         next(error);
@@ -126,7 +134,6 @@ exports.checkWaitingList = async (req, res, next) => {
     }
 };
 
-// NOVO CONTROLLER
 exports.scheduleFromWaitlist = async (req, res, next) => {
     try {
         const { newDateTime } = req.body;
@@ -148,7 +155,18 @@ exports.attendFromWaitlist = async (req, res, next) => {
 
 exports.cancelAppointment = async (req, res, next) => {
     try {
+        const originalAppointment = await appointmentModel.findById(req.params.id);
         const updatedAppointment = await appointmentService.cancelAppointment(req.params.id);
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'Cancel Appointments',
+            target_entity: 'appointments',
+            target_id: req.params.id,
+            details: {
+                before: originalAppointment,
+                after: updatedAppointment
+            }
+        });
         res.status(200).json(updatedAppointment);
     } catch (error) {
         next(error);

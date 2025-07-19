@@ -163,8 +163,8 @@ exports.startService = async (appointmentId, loggedInUserId) => {
     return appointmentModel.updateStatus(appointmentId, 'in_progress');
 };
 
-exports.checkFutureSchedule = async (patientId) => {
-    return appointmentModel.findFutureScheduledAppointment(patientId);
+exports.checkFutureSchedule = async (patientId, professional_id) => {
+    return appointmentModel.findFutureScheduledAppointment(patientId, professional_id);
 };
 
 
@@ -182,11 +182,21 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
         throw new Error("Utilizador autenticado não encontrado.");
     }
 
+    // ====================================================================
+    // CORREÇÃO AQUI: Busca o nome da especialidade do usuário logado
+    // ====================================================================
+    if (loggedInUser.specialty_id) {
+        const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [loggedInUser.specialty_id]);
+        // Adiciona a propriedade 'specialty_name' ao objeto para uso posterior
+        loggedInUser.specialty_name = specialtyResponse.rows[0]?.name;
+    }
+    // ====================================================================
+
     const appointment = await appointmentModel.findById(appointmentId);
     if (!appointment) throw new Error("Agendamento não encontrado.");
     if (appointment.professional_id !== loggedInUserId) throw new Error("Não autorizado.");
 
-    // Regra de negócio: Atualiza a evolução na tabela de registos médicos (medical_records)
+    // Regra de negócio: Atualiza a evolução na tabela de registos médicos
     await db.query(
         'INSERT INTO medical_records (patient_id, professional_id, appointment_id, evolution) VALUES ($1, $2, $3, $4)',
         [appointment.patient_id, loggedInUserId, appointmentId, evolution]
@@ -194,10 +204,7 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
 
     if (referral_ids && referral_ids.length > 0) {
         for (const professionalId of referral_ids) {
-            // Verifica se o paciente já está na lista de espera para este profissional
             const existingEntry = await appointmentModel.findWaitingListEntry(appointment.patient_id, professionalId);
-
-            // Se não estiver, cria a nova entrada na lista de espera
             if (!existingEntry) {
                 const professional = await userModel.findById(professionalId);
                 if (professional) {
@@ -219,29 +226,29 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
         }
     }
 
-    // 4. LÓGICA DE NEGÓCIO: Se houver um retorno, cria uma nova entrada na lista de espera.
+    // Lógica de retorno (follow-up)
     if (!discharge_given && follow_up_days && Number(follow_up_days) > 0) {
-        // Cria a nova entrada na lista de espera para o mesmo profissional
         await appointmentModel.create({
             patient_id: appointment.patient_id,
             professional_id: loggedInUserId,
             unit_id: loggedInUser.unit_id,
             appointment_datetime: new Date(),
+            // Esta linha agora funcionará corretamente
             service_type: loggedInUser.specialty_name || 'Retorno',
-            observations: `Retorno solicitado em ${follow_up_days} dias pelo(a) Dr(a). ${loggedInUser.name}.`,
+            observations: `Retorno solicitado em ${follow_up_days} dias pelo(a) Dr(a) ${loggedInUser.name} em ${appointment.appointment_datetime.toLocaleDateString('pt-BR')}.`,
             status: 'on_waiting_list',
             vinculo: appointment.vinculo || 'nenhum',
             created_by: loggedInUserId,
         });
     }
 
-    // Regra de negócio: Cria os encaminhamentos
+    // Cria os registros de encaminhamento
     await appointmentModel.createReferrals(appointmentId, referral_ids);
 
-    // Regra de negócio: Atualiza o status do agendamento original
+    // Atualiza o status do agendamento original para 'completed'
     await appointmentModel.updateStatus(appointmentId, 'completed');
 
-    // Atualiza a própria tabela de agendamentos com o resultado
+    // Atualiza a própria tabela de agendamentos com as informações de alta/retorno
     await db.query(
         'UPDATE appointments SET discharge_given = $1, follow_up_days = $2 WHERE appointment_id = $3',
         [discharge_given, follow_up_days, appointmentId]
@@ -280,7 +287,7 @@ exports.createOnDemandService = async (data) => {
         unit_id: professional.unit_id,
         appointment_datetime: null,
         service_type: specialtyName,
-        observations: 'Atendimento avulso (gerado na receção)',
+        observations: 'Atendimento avulso (gerado)',
         status: 'waiting',
         vinculo: vinculo,
         created_by: professional_id
