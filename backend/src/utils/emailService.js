@@ -33,7 +33,6 @@ const sendEmail = async (options) => {
     try {
         const command = new SendEmailCommand(params);
         await sesClient.send(command);
-        console.log(`Email enviado com sucesso para ${options.email} via SES.`);
     } catch (error) {
         console.error("Falha ao enviar email via SES:", error);
         throw new Error("Não foi possível enviar o email.");
