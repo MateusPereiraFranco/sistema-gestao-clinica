@@ -30,12 +30,10 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Garante que o código de verificação só roda no cliente.
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    // Se o utilizador já estiver logado, redireciona para o dashboard.
     useEffect(() => {
         if (isClient && user) {
             router.replace('/dashboard');
@@ -49,7 +47,6 @@ export default function LoginPage() {
         try {
             const response = await api.post<LoginResponse>('/auth/login', { email, password });
             setUser(response.data.user, response.data.token);
-            // 2. Redefine as datas para o dia de hoje.
             resetDatesToToday();
             toast.success(`Bem-vindo de volta, ${response.data.user.name}!`, { id: toastId });
             router.push('/dashboard');
@@ -61,8 +58,6 @@ export default function LoginPage() {
         }
     };
 
-    // Enquanto a verificação do lado do cliente está a decorrer ou se vai redirecionar,
-    // mostra um ecrã de carregamento para evitar um "flash" do formulário.
     if (!isClient || user) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-100">

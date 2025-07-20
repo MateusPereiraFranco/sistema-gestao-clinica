@@ -11,15 +11,12 @@ import { useEffect, useState } from 'react';
 export function useAuth() {
     const user = useAuthStore((state) => state.user);
     const router = useRouter();
-    // Este estado garante que a verificação só acontece após a renderização no cliente.
     const [isReady, setIsReady] = useState(false); 
 
     useEffect(() => {
-        // Se, após a renderização no cliente, não houver utilizador, redireciona para o login.
         if (!user) {
             router.replace('/login');
         } else {
-            // Se houver um utilizador, a rota está pronta para ser exibida.
             setIsReady(true);
         }
     }, [user, router]);

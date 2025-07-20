@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Download, ChevronDown, ChevronUp } from 'lucide-react'; // Usando seus ícones lucide-react
-import { exportGroupedWithDetailsToCSV } from '@/utils/export'; // Seu utilitário de exportação
-import api from "@/services/api"; // Importando sua instância de API
-import toast from "react-hot-toast"; // Usando react-hot-toast
-import { Appointment, AppointmentStatus } from "@/types"; // Importando sua interface Appointment e PatientVinculo para os detalhes
+import { Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { exportGroupedWithDetailsToCSV } from '@/utils/export';
+import api from "@/services/api";
+import toast from "react-hot-toast";
+import { Appointment, AppointmentStatus } from "@/types";
 import { statusLabels } from '@/utils/statusUtils';
 
 interface ReportData {
@@ -20,30 +20,25 @@ interface ReportData {
     };
     total: number;
 }
-
-// Interface para os filtros passados da página principal
 interface ReportTableProps {
     data: ReportData[];
     period: string;
-    filters: { // Filtros gerais da página de relatório
+    filters: {
         startDate: string;
         endDate: string;
-        professionalId: string; // Este é o filtro geral, pode ser 'all'
+        professionalId: string;
         unitId: string;
-        includeInactive: boolean; // CORREÇÃO: Alterado para boolean
+        includeInactive: boolean;
         status: string;
     };
-    token: string | null; // Token de autenticação
+    token: string | null;
 }
 
 export default function GroupedReportTable({ data, period, filters, token }: ReportTableProps) {
-    // Estado para controlar qual profissional/linha está expandida e seus dados detalhados
-    // A chave será o user_id do profissional
     const [expandedProfessionalDetails, setExpandedProfessionalDetails] = useState<Record<string, Appointment[]>>({});
     const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
 
     if (data.length === 0) {
-        console.log('data', data)
         return <p className="text-center text-gray-500 py-8">Nenhum dado para exibir.</p>;
     }
 
@@ -51,18 +46,16 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
 
     const [isExporting, setIsExporting] = useState(false);
     
-    // Função para exportar os dados do relatório para CSV
     const handleExport = async () => {
         setIsExporting(true);
         toast.loading('Preparando dados para exportação...');
 
         try {
-            // Cria uma cópia dos detalhes já carregados
+
             const allDetails = { ...expandedProfessionalDetails };
 
-            // Mapeia as promises para buscar os detalhes que ainda não foram carregados
             const detailPromises = data
-                .filter(item => !allDetails[item.user_id]) // Filtra apenas os que não estão no estado
+                .filter(item => !allDetails[item.user_id])
                 .map(item => {
                     const params = {
                         startDate: filters.startDate,
@@ -74,18 +67,15 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                     return api.get(`/appointments/detailed-report`, { params, headers: { 'Authorization': `Bearer ${token}` } });
                 });
 
-            // Executa todas as buscas em paralelo
             const results = await Promise.all(detailPromises);
 
-            // Adiciona os novos detalhes ao nosso objeto 'allDetails'
             results.forEach((response, index) => {
                 const professionalId = data.filter(item => !expandedProfessionalDetails[item.user_id])[index].user_id;
                 allDetails[professionalId] = response.data.data.appointments;
             });
 
-            toast.dismiss(); // Remove o toast de loading
+            toast.dismiss();
             
-            // Chama a função de exportação com todos os dados (resumo + detalhes completos)
             exportGroupedWithDetailsToCSV(
                 data,
                 allDetails,
@@ -101,7 +91,6 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
         }
     };
 
-    // Função para formatar a data para exibição
     const formatDateForDisplay = (dateString: string) => {
         if (!dateString) return 'N/A';
         try {
@@ -113,7 +102,6 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
         }
     };
 
-    // Função para lidar com a expansão/colapso de uma linha de profissional
     const toggleProfessionalExpansion = async (professionalId: string) => {
         if (expandedProfessionalDetails[professionalId]) {
             setExpandedProfessionalDetails(prev => {
@@ -124,7 +112,6 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
         } else {
             setLoadingDetails(prev => ({ ...prev, [professionalId]: true }));
             try {
-                // 1. Crie um objeto de parâmetros simples
                 const detailedFiltersParams: any = {
                     startDate: filters.startDate,
                     endDate: filters.endDate,
@@ -132,21 +119,16 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                     includeInactive: filters.includeInactive,
                 };
 
-                // 2. Adicione o filtro de unidade se existir
                 if (filters.unitId) {
                     detailedFiltersParams.unitId = filters.unitId;
                 }
 
-                // 3. Adicione o filtro de status dinamicamente
-                //    A API de detalhes espera 'statusArray'
                 if (filters.status && filters.status !== 'all') {
                     detailedFiltersParams.statusArray = [filters.status];
                 }
                 
-                // 4. Deixe o axios formatar os parâmetros para você
-                //    Ele vai converter 'statusArray' para 'statusArray[]=' na URL, o que é perfeito
                 const response = await api.get(`/appointments/detailed-report`, {
-                    params: detailedFiltersParams, // Passando o objeto de parâmetros aqui
+                    params: detailedFiltersParams,
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -249,7 +231,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                                     <td className="p-2 text-gray-700">{detail.patient_cpf || 'N/A'}</td>
                                                     <td className="p-2 text-gray-700">{detail.vinculo}</td>
                                                     <td className="p-2 text-gray-700">{statusLabels[detail.status as AppointmentStatus] || detail.status}</td>
-                                                    <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations}>
+                                                    <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations || 'N/A'}>
                                                         {detail.observations || 'N/A'}
                                                     </td>
                                                 </tr>

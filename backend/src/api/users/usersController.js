@@ -1,4 +1,5 @@
 const userService = require('./usersService');
+const userModel = require('./usersModel');
 const auditLogModel = require('../auditLogs/auditLogModel');
 
 exports.createUser = async (req, res, next) => {
@@ -61,7 +62,7 @@ exports.updateUser = async (req, res, next) => {
             user_id: req.user.user_id,
             action: 'UPDATE_USER',
             target_entity: 'users',
-            target_id: userId,
+            target_id: req.params.id,
             details: {
                 before: originalLogDetails,
                 after: updatedLogDetails
@@ -80,7 +81,10 @@ exports.toggleUserStatus = async (req, res, next) => {
         if (!userToToggle) {
             return res.status(404).json({ message: "Utilizador não encontrado." });
         }
+
+        const newStatus = !userToToggle.is_active;
         await userService.toggleUserStatus(req.params.id, req.user);
+
         await auditLogModel.createLog({
             user_id: req.user.user_id,
             action: newStatus ? 'ACTIVATE_USER' : 'DEACTIVATE_USER',

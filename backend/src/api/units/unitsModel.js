@@ -1,6 +1,5 @@
 const db = require('../../config/db');
 
-// Encontra todas as unidades
 exports.findAll = async (filters = {}) => {
     let query = 'SELECT * FROM units';
     const params = [];
@@ -13,13 +12,11 @@ exports.findAll = async (filters = {}) => {
     return rows;
 };
 
-// Encontra uma unidade por ID
 exports.findById = async (id) => {
     const { rows } = await db.query('SELECT * FROM units WHERE unit_id = $1', [id]);
     return rows[0];
 };
 
-// Cria uma nova unidade
 exports.create = async ({ name, address }) => {
     const { rows } = await db.query(
         'INSERT INTO units (name, address) VALUES ($1, $2) RETURNING *',
@@ -28,9 +25,7 @@ exports.create = async ({ name, address }) => {
     return rows[0];
 };
 
-// Atualiza uma unidade
 exports.update = async (id, { name, address, is_active }) => {
-    // Constrói a query dinamicamente para atualizar apenas os campos fornecidos
     const fields = [];
     const params = [];
     let paramIndex = 1;
@@ -49,7 +44,7 @@ exports.update = async (id, { name, address, is_active }) => {
     }
 
     if (fields.length === 0) {
-        return this.findById(id); // Retorna o original se nada for alterado
+        return this.findById(id);
     }
 
     params.push(id);
@@ -59,7 +54,6 @@ exports.update = async (id, { name, address, is_active }) => {
     return rows[0];
 };
 
-// Apaga uma unidade
 exports.delete = async (id) => {
     const result = await db.query('DELETE FROM units WHERE unit_id = $1', [id]);
     return result.rowCount > 0;

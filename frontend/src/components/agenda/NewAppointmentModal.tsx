@@ -101,21 +101,17 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
             toast.error("Por favor, selecione um vínculo.");
             return;
         }
-        // Passo 1: Verificar se há um agendamento futuro.
         if (futureAppointment) {
             setShowFutureScheduleConflictModal(true);
             return;
         }
-        // Passo 2: Verificar se está na lista de espera.
         if (waitingListEntry) {
             setShowConflictModal(true);
             return;
         }
-        // Se não houver conflitos, cria diretamente.
         await createNewAppointment();
     };
     
-    // Limpa o estado quando o modal é fechado ou um novo paciente é selecionado
     const resetSearch = () => {
         setSearchFilters({ name: '', cpf: '', birth_date: '' });
         setSuggestions([]);
@@ -232,7 +228,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                 entry={futureAppointment!}
                 onConfirm={() => {
                     setShowFutureScheduleConflictModal(false);
-                    createNewAppointment(); // Cria um novo agendamento, sem atualizar nenhum existente.
+                    createNewAppointment();
                 }}
             />
         </>

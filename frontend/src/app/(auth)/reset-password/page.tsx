@@ -22,7 +22,6 @@ function ResetPasswordComponent() {
         if (emailFromQuery) {
             setEmail(decodeURIComponent(emailFromQuery));
         } else {
-            // Se não houver email, não faz sentido estar nesta página.
             toast.error("Email não fornecido. Por favor, comece o processo novamente.");
             router.push('/forgot-password');
         }
@@ -30,7 +29,6 @@ function ResetPasswordComponent() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Validação das palavras-passe
         if (newPassword !== confirmPassword) {
             toast.error("As palavras-passe não coincidem.");
             return;

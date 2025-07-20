@@ -1,7 +1,6 @@
 const unitModel = require('./unitsModel');
 const auditLogModel = require('../auditLogs/auditLogModel');
 
-// Buscar todas as unidades (com filtro opcional de status)
 exports.getAllUnits = async (req, res, next) => {
     try {
         const { is_active } = req.query;
@@ -12,7 +11,6 @@ exports.getAllUnits = async (req, res, next) => {
     }
 };
 
-// Buscar uma unidade por ID
 exports.getUnitById = async (req, res, next) => {
     try {
         const unit = await unitModel.findById(req.params.id);
@@ -25,7 +23,6 @@ exports.getUnitById = async (req, res, next) => {
     }
 };
 
-// Criar uma nova unidade
 exports.createUnit = async (req, res, next) => {
     try {
         const { name, address } = req.body;
@@ -42,7 +39,6 @@ exports.createUnit = async (req, res, next) => {
         });
         res.status(201).json(newUnit);
     } catch (error) {
-        // Trata erro de nome duplicado
         if (error.code === '23505') {
             return res.status(409).json({ message: 'Já existe uma unidade com este nome.' });
         }
@@ -50,20 +46,24 @@ exports.createUnit = async (req, res, next) => {
     }
 };
 
-// Atualizar uma unidade
 exports.updateUnit = async (req, res, next) => {
     try {
+        const unit = await unitModel.findById(req.params.id);
         const { name, address } = req.body;
         const updatedUnit = await unitModel.update(req.params.id, { name, address });
         if (!updatedUnit) {
             return res.status(404).json({ message: 'Unidade não encontrada.' });
         }
+
         await auditLogModel.createLog({
             user_id: req.user.user_id,
             action: 'UPDATED',
             target_entity: 'units',
             target_id: updatedUnit.unit_id,
-            details: { from_status: unit.is_active, to_status: updatedUnit.is_active }
+            details: {
+                before: unit,
+                after: updatedUnit
+            }
         });
         res.status(200).json(updatedUnit);
     } catch (error) {
@@ -74,7 +74,6 @@ exports.updateUnit = async (req, res, next) => {
     }
 };
 
-// Ativar/Desativar uma unidade
 exports.toggleUnitStatus = async (req, res, next) => {
     try {
         const unit = await unitModel.findById(req.params.id);
@@ -95,14 +94,13 @@ exports.toggleUnitStatus = async (req, res, next) => {
     }
 };
 
-// Apagar uma unidade (opcional, mas bom ter)
 exports.deleteUnit = async (req, res, next) => {
     try {
         const deleted = await unitModel.delete(req.params.id);
         if (!deleted) {
             return res.status(404).json({ message: 'Unidade não encontrada.' });
         }
-        res.status(204).send(); // 204 No Content
+        res.status(204).send();
     } catch (error) {
         next(error);
     }

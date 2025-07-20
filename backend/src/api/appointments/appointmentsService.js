@@ -141,25 +141,21 @@ exports.startService = async (appointmentId, loggedInUserId) => {
         const loggedInUser = await userModel.findById(loggedInUserId);
         if (loggedInUser.profile !== 'admin') {
             const error = new Error('Você não tem permissão para atender este paciente.');
-            error.statusCode = 403; // 403 Forbidden
+            error.statusCode = 403;
             throw error;
         }
     }
 
-    // CORREÇÃO: A validação agora permite continuar um atendimento que já está em progresso.
     if (appointment.status !== 'waiting' && appointment.status !== 'in_progress') {
         const error = new Error(`Não é possível iniciar um atendimento com status '${appointment.status}'.`);
-        error.statusCode = 409; // 409 Conflict
+        error.statusCode = 409;
         throw error;
     }
 
-    // Se o status já for 'in_progress', não há necessidade de o atualizar novamente.
-    // Simplesmente permitimos que o fluxo continue.
     if (appointment.status === 'in_progress') {
         return appointment;
     }
 
-    // Se o status for 'waiting', atualiza para 'in_progress'.
     return appointmentModel.updateStatus(appointmentId, 'in_progress');
 };
 
@@ -182,21 +178,15 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
         throw new Error("Utilizador autenticado não encontrado.");
     }
 
-    // ====================================================================
-    // CORREÇÃO AQUI: Busca o nome da especialidade do usuário logado
-    // ====================================================================
     if (loggedInUser.specialty_id) {
         const specialtyResponse = await db.query('SELECT name FROM specialties WHERE specialty_id = $1', [loggedInUser.specialty_id]);
-        // Adiciona a propriedade 'specialty_name' ao objeto para uso posterior
         loggedInUser.specialty_name = specialtyResponse.rows[0]?.name;
     }
-    // ====================================================================
 
     const appointment = await appointmentModel.findById(appointmentId);
     if (!appointment) throw new Error("Agendamento não encontrado.");
     if (appointment.professional_id !== loggedInUserId) throw new Error("Não autorizado.");
 
-    // Regra de negócio: Atualiza a evolução na tabela de registos médicos
     await db.query(
         'INSERT INTO medical_records (patient_id, professional_id, appointment_id, evolution) VALUES ($1, $2, $3, $4)',
         [appointment.patient_id, loggedInUserId, appointmentId, evolution]
@@ -226,14 +216,12 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
         }
     }
 
-    // Lógica de retorno (follow-up)
     if (!discharge_given && follow_up_days && Number(follow_up_days) > 0) {
         await appointmentModel.create({
             patient_id: appointment.patient_id,
             professional_id: loggedInUserId,
             unit_id: loggedInUser.unit_id,
             appointment_datetime: new Date(),
-            // Esta linha agora funcionará corretamente
             service_type: loggedInUser.specialty_name || 'Retorno',
             observations: `Retorno solicitado em ${follow_up_days} dias pelo(a) Dr(a) ${loggedInUser.name} em ${appointment.appointment_datetime.toLocaleDateString('pt-BR')}.`,
             status: 'on_waiting_list',
@@ -242,13 +230,10 @@ exports.completeService = async (appointmentId, data, loggedInUserId) => {
         });
     }
 
-    // Cria os registros de encaminhamento
     await appointmentModel.createReferrals(appointmentId, referral_ids);
 
-    // Atualiza o status do agendamento original para 'completed'
     await appointmentModel.updateStatus(appointmentId, 'completed');
 
-    // Atualiza a própria tabela de agendamentos com as informações de alta/retorno
     await db.query(
         'UPDATE appointments SET discharge_given = $1, follow_up_days = $2 WHERE appointment_id = $3',
         [discharge_given, follow_up_days, appointmentId]
@@ -306,12 +291,10 @@ exports.getCompletedServiceDetails = async (appointmentId) => {
     return details;
 };
 
-// NOVO SERVIÇO: Para verificar a lista de espera.
 exports.checkWaitingList = async (patientId, professionalId) => {
     return appointmentModel.findWaitingListEntry(patientId, professionalId);
 };
 
-// NOVO SERVIÇO: Para agendar a partir da lista de espera.
 exports.scheduleFromWaitlist = async (appointmentId, newDateTime) => {
     return appointmentModel.updateFromWaitingListToScheduled(appointmentId, newDateTime);
 };
@@ -332,10 +315,9 @@ exports.cancelAppointment = async (appointmentId) => {
         throw error;
     }
 
-    // Regra de negócio: Não se pode cancelar um atendimento já concluído.
     if (appointment.status === 'completed') {
         const error = new Error('Não é possível cancelar um atendimento que já foi concluído.');
-        error.statusCode = 409; // Conflict
+        error.statusCode = 409;
         throw error;
     }
 

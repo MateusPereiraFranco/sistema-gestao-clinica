@@ -48,7 +48,6 @@ exports.findWithFilters = async (filters) => {
     return rows;
 };
 
-// Atualizado para incluir os novos campos
 exports.create = async (patientData) => {
     const {
         name, mother_name, father_name, cpf, cns, birth_date,
@@ -153,7 +152,6 @@ exports.remove = async (id) => {
     return rowCount;
 };
 
-// NOVA FUNÇÃO: Busca o histórico completo de atendimentos de um paciente.
 exports.findHistoryByPatientId = async (patientId, startDate, endDate, professional_id) => {
     let query = `
         SELECT

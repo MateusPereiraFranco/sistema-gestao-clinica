@@ -46,7 +46,7 @@ export default function PatientForm({ patient }: { patient?: Patient }) {
         const { name, value } = e.target;
         let maskedValue = value;
         if (name === 'cpf') maskedValue = maskCPF(value);
-        if (name === 'cns') maskedValue = maskCNS(value); // Aplicar máscara do CNS
+        if (name === 'cns') maskedValue = maskCNS(value);
         if (name === 'cell_phone_1' || name === 'cell_phone_2') maskedValue = maskPhone(value);
         if (name === 'cep') maskedValue = maskCEP(value);
         setFormData(prev => ({ ...prev, [name]: maskedValue }));

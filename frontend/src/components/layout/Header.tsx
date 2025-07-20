@@ -3,7 +3,7 @@ import React from "react";
 
 interface HeaderProps {
     title: string;
-    action?: React.ReactNode; // A propriedade 'action' é um nó React opcional
+    action?: React.ReactNode;
 }
 
 export default function Header({ title, action }: HeaderProps) {

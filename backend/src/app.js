@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-//const xss = require('xss-clean');
 const hpp = require('hpp');
 const { generalApiLimiter } = require('./config/rateLimiter');
 
@@ -24,9 +22,15 @@ app.use('/api', generalApiLimiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-//app.use(xss());
 app.use(hpp());
-app.use(cors());
+
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+const corsOptions = {
+    origin: allowedOrigin,
+};
+
+app.use(cors(corsOptions));
 
 
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'UP' }));

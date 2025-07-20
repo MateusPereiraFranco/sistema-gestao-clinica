@@ -27,7 +27,7 @@ export default function UnitFormModal({ unit, onClose, onSave }: UnitFormModalPr
         setIsSaving(true);
         const success = await onSave({ name, address });
         if (!success) {
-            setIsSaving(false); // Só para o loading se houver erro
+            setIsSaving(false);
         }
     };
 

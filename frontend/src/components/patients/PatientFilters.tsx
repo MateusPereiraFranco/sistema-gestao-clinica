@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { maskCNS, maskCPF } from '@/utils/masks';
-import { useDebounce } from '@/hooks/useDebounce'; // Assumindo que o hook useDebounce existe
+import { useDebounce } from '@/hooks/useDebounce';
 import { Patient } from '@/types';
 import api from '@/services/api';
 
@@ -21,7 +21,7 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
     });
 
     const [liveSuggestions, setLiveSuggestions] = useState<Patient[]>([]);
-    const debouncedName = useDebounce(filters.name, 300); // Debounce para a busca ao vivo
+    const debouncedName = useDebounce(filters.name, 300);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -46,7 +46,6 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
         const fetchSuggestions = async () => {
             if (debouncedName.length > 2) {
                 try {
-                    // A busca ao vivo usa apenas o campo de nome para as sugestões
                     const response = await api.get('/patients', { params: { name: debouncedName } });
                     setLiveSuggestions(response.data);
                 } catch (error) {
@@ -58,7 +57,6 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
             }
         };
 
-        // Não executa a busca ao vivo se outros campos estiverem preenchidos
         if (!filters.mother_name && !filters.cpf && !filters.cns) {
             fetchSuggestions();
         }
@@ -67,7 +65,7 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setLiveSuggestions([]); // Esconde a lista de sugestões
+        setLiveSuggestions([]);
         const activeFilters = Object.fromEntries(
             Object.entries(filters).filter(([_, v]) => v !== '')
         );

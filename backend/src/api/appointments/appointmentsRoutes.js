@@ -22,7 +22,6 @@ router.patch('/:id/attend-from-waitlist', appointmentController.attendFromWaitli
 
 router.patch('/:id/cancel', restrictTo('admin', 'master'), appointmentController.cancelAppointment);
 
-// Rotas para gerir o ciclo de vida
 router.patch('/:id/check-in', appointmentController.checkIn);
 router.patch('/:id/mark-as-missed', appointmentController.markAsMissed);
 

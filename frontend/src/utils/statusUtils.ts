@@ -1,4 +1,4 @@
-import { AppointmentStatus } from "@/types"; // Importe o tipo para garantir a consistência
+import { AppointmentStatus } from "@/types";
 
 export const statusLabels: { [key in AppointmentStatus]?: string } = {
     completed: 'Finalizado',

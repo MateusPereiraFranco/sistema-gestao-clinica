@@ -12,13 +12,10 @@ export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    // Cria um temporizador que só atualiza o valor após o 'delay'
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
 
-    // Limpa o temporizador se o valor mudar antes do fim do 'delay'.
-    // Isto garante que só a última atualização conta.
     return () => {
       clearTimeout(handler);
     };

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-// Aceita todas as propriedades de um input HTML padrão para máxima reutilização.
 interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 export default function PasswordInput(props: PasswordInputProps) {

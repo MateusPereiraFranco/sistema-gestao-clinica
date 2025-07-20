@@ -29,7 +29,6 @@ export default function AgendaFilters({ professionals }: AgendaFiltersProps) {
                     id="professional_agenda_filter"
                     value={agendaProfessional}
                     onChange={(e) => setAgendaProfessional(e.target.value)}
-                    // A propriedade 'disabled' foi removida para permitir que todos os utilizadores alterem.
                     className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
                     {/* A opção "Todos" foi removida anteriormente, como solicitado. */}

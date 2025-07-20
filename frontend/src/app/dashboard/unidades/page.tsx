@@ -21,6 +21,9 @@ export default function GerirUnidadesPage() {
 
     // Função para buscar as unidades
     const fetchUnits = useCallback(async () => {
+        if (!user) {
+            return;
+        }
         setIsLoading(true);
         try {
             const response = await api.get('/units');
@@ -30,7 +33,7 @@ export default function GerirUnidadesPage() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         if (user && user.profile !== 'admin') {

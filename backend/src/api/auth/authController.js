@@ -11,7 +11,6 @@ exports.login = async (req, res, next) => {
 };
 
 exports.getMe = async (req, res, next) => {
-    // Para ser consistente, vamos retornar os dados higienizados através do serviço.
     try {
         const user = await require('../users/usersService').getUserById(req.user.user_id);
         res.status(200).json(user);
@@ -40,7 +39,6 @@ exports.forgotPassword = async (req, res, next) => {
     }
 };
 
-// NOVO CONTROLLER
 exports.resetPassword = async (req, res, next) => {
     try {
         const { email, token, newPassword } = req.body;

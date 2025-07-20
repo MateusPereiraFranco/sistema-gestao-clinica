@@ -1,5 +1,3 @@
-// backend/src/api/auditLogs/auditLogModel.js
-
 const db = require('../../config/db');
 
 exports.createLog = async (logData) => {

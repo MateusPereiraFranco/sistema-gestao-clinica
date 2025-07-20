@@ -22,7 +22,6 @@ exports.isValidCNS = (cns) => {
     cns = cns.replace(/[^\d]+/g, '');
     if (cns.length !== 15) return false;
 
-    // CNS Provisório (iniciado com 7, 8 ou 9)
     if (['7', '8', '9'].includes(cns[0])) {
         let soma = 0;
         for (let i = 0; i < 15; i++) {
@@ -31,7 +30,6 @@ exports.isValidCNS = (cns) => {
         return soma % 11 === 0;
     }
 
-    // CNS Definitivo (iniciado com 1 ou 2)
     if (['1', '2'].includes(cns[0])) {
         let soma = 0;
         for (let i = 0; i < 11; i++) {

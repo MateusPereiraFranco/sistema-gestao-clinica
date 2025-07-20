@@ -63,7 +63,6 @@ export default function AgendaTimeSlots({ appointments, isLoading, onCheckIn, on
         setExpandedObservationId(prevId => (prevId === appointmentId ? null : appointmentId));
     };
     
-    // O intervalo agora é fixo em 30 minutos.
     const slotInterval = 30;
     const timeSlots = [];
     const startTime = 8 * 60;

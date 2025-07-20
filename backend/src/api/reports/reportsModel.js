@@ -1,25 +1,20 @@
 const db = require('../../config/db');
 
 exports.getGroupedServicesSummary = async (filters) => {
-    // 1. Adicione 'status' aos filtros que você recebe
     const { startDate, endDate, professionalId, unitId, includeInactive, status } = filters;
 
     const params = [startDate, endDate];
 
-    // 2. Crie a subconsulta de atendimentos dinamicamente
     let appointmentSubQuery = `
         SELECT * FROM appointments
         WHERE appointment_datetime::date BETWEEN $1 AND $2
     `;
 
-    // Se um status específico for enviado (e não for 'all'), adicione o filtro
     if (status && status !== 'all') {
-        // Usa o próximo índice de parâmetro disponível
         appointmentSubQuery += ` AND status = $${params.length + 1}`;
         params.push(status);
     }
 
-    // 3. Monte a query principal injetando a subconsulta
     let query = `
         SELECT
             u.user_id,
@@ -40,7 +35,6 @@ exports.getGroupedServicesSummary = async (filters) => {
             patients p ON apt.patient_id = p.patient_id
     `;
 
-    // O restante da lógica continua igual, mas usando o array de params para o índice
     const whereConditions = ['u.has_agenda = true'];
     if (professionalId && professionalId !== 'all') {
         whereConditions.push(`u.user_id = $${params.length + 1}`);

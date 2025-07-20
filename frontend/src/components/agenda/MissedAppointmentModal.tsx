@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 interface ModalProps {
-    isOpen: boolean; // <-- Propriedade adicionada
+    isOpen: boolean;
     appointment: Appointment | null;
     onClose: () => void;
     onUpdate: () => void;
@@ -25,7 +25,7 @@ export default function MissedAppointmentModal({ isOpen, appointment, onClose, o
         }
     }, [appointment]);
 
-    if (!isOpen || !appointment) return null; // A verificação agora usa a prop 'isOpen'
+    if (!isOpen || !appointment) return null;
 
     const handleConfirm = async () => {
         setIsLoading(true);

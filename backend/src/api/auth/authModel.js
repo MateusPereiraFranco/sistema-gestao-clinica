@@ -1,7 +1,6 @@
 const db = require('../../config/db');
 
 exports.createPasswordResetToken = async (email, hashedToken, expiresAt) => {
-    // Usa ON CONFLICT para atualizar o token se já existir um pedido para aquele email.
     const query = `
         INSERT INTO password_resets (email, token, expires_at)
         VALUES ($1, $2, $3)

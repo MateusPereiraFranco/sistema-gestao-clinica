@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import PasswordInput from '../ui/PasswordInput';
 
 interface UserFormProps {
-    userToEdit?: User; // O utilizador a ser editado (opcional)
+    userToEdit?: User;
 }
 
 export default function UserForm({ userToEdit }: UserFormProps) {
@@ -24,16 +24,15 @@ export default function UserForm({ userToEdit }: UserFormProps) {
     const [formData, setFormData] = useState({
         name: userToEdit?.name || '',
         email: userToEdit?.email || '',
-        password: '', // A palavra-passe fica em branco no modo de edição
+        password: '',
         profile: userToEdit?.profile || 'normal',
         unit_id: userToEdit?.unit_id || loggedInUser?.unit_id || '',
         specialty_id: userToEdit?.specialty_id || '',
         is_active: userToEdit?.is_active ?? true,
-        has_agenda: userToEdit?.has_agenda,
+        has_agenda: userToEdit?.has_agenda ?? true,
     });
 
     useEffect(() => {
-        // Busca as listas de unidades e especialidades
         if (loggedInUser?.profile === 'admin') {
             api.get('/units').then(res => setUnits(res.data));
         }
@@ -72,7 +71,6 @@ export default function UserForm({ userToEdit }: UserFormProps) {
     };
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Secção de Detalhes do Utilizador */}
             <div>
                 <h2 className="text-xl font-semibold text-gray-900">Detalhes do Utilizador</h2>
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -92,8 +90,6 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                     )}
                 </div>
             </div>
-
-            {/* Secção de Permissões e Associação */}
             <div className="border-t border-gray-900/10 pt-8">
                 <h2 className="text-xl font-semibold text-gray-900">Função e Unidade</h2>
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -131,11 +127,9 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                             disabled={loggedInUser?.profile === 'master'} 
                             className="mt-2 block w-full rounded-md border-0 py-2.5 shadow-sm ring-1 ring-inset ring-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >
-                           {/* Se for admin, mostra a lista de unidades. */}
                            {loggedInUser?.profile === 'admin' && units.map(unit => 
                                 <option key={unit.unit_id} value={unit.unit_id}>{unit.name}</option>
                            )}
-                           {/* Se for master, mostra apenas a sua própria unidade. */}
                            {loggedInUser?.profile === 'master' && 
                                 <option value={loggedInUser.unit_id}>{loggedInUser.unit_name || 'Minha Unidade'}</option>
                            }

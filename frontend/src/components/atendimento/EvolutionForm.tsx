@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 
 interface EvolutionFormProps {
     appointmentId: string;
-    patientId: string; // <-- A prop agora é recebida aqui
+    patientId: string;
 }
 
 interface Conflict {

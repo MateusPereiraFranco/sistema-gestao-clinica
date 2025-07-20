@@ -52,6 +52,13 @@ exports.addToWaitingList = async (req, res, next) => {
 exports.createOnDemandService = async (req, res, next) => {
     try {
         const newAppointment = await appointmentService.createOnDemandService(req.body);
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'CREATE_APPOINTMENT_ON_DEMAND_SERVICE',
+            target_entity: 'appointments',
+            target_id: newAppointment.appointment_id,
+            details: { ...newAppointment }
+        });
         res.status(201).json(newAppointment);
     } catch (error) {
         next(error);
@@ -79,7 +86,6 @@ exports.markAsMissed = async (req, res, next) => {
 
 exports.startService = async (req, res, next) => {
     try {
-        // Passamos o ID do agendamento (dos parâmetros da URL) e o ID do utilizador logado (do token) para o serviço.
         const updatedAppointment = await appointmentService.startService(req.params.id, req.user.user_id);
         res.status(200).json(updatedAppointment);
     } catch (error) {

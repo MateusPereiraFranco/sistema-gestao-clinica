@@ -39,7 +39,6 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
         const toastId = toast.loading("A verificar lista de espera...");
 
         try {
-            // Passo 1: Verificar se já existe uma entrada.
             const checkResponse = await api.get('/appointments/check-waiting-list', {
                 params: {
                     patientId: patient.patient_id,
@@ -50,7 +49,6 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
 
             const existingEntry: Appointment | null = checkResponse.data;
 
-            // Passo 2: Se existir, mostrar o alerta e parar.
             if (existingEntry) {
                 toast.error(
                     `Este paciente já está na lista de espera para este médico desde ${existingEntry.request_date}, adicionado por ${existingEntry.created_by_name || 'desconhecido'}.`,
@@ -60,7 +58,6 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                 return;
             }
 
-            // Passo 3: Se não existir, criar a nova entrada.
             toast.loading("A adicionar à lista...", { id: toastId });
             await api.post('/appointments/waiting-list', {
                 patient_id: patient.patient_id,

@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import { Specialty } from '@/types';
-import { Search, Plus, X } from 'lucide-react'; // Importe os ícones
+import { Search, Plus, X } from 'lucide-react';
 import { useFilterStore } from '@/stores/useFilterStore';
-import api from '@/services/api'; // Importe sua instância da API
+import api from '@/services/api';
 import toast from 'react-hot-toast';
 
 interface UserFiltersProps {
     specialties: Specialty[];
     onSearch: (filters: { name: string; specialtyId: string, is_active: boolean }) => void;
     isLoading: boolean;
-    // 1. Adicione uma nova prop para notificar a página pai sobre a nova especialidade
     onSpecialtyCreated: (newSpecialty: Specialty) => void; 
 }
 
@@ -20,7 +19,6 @@ export default function UserFilters({ specialties, onSearch, isLoading, onSpecia
     const [name, setName] = useState('');
     const [specialtyId, setSpecialtyId] = useState('all');
     
-    // Estados para controlar o modal
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newSpecialtyName, setNewSpecialtyName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -30,7 +28,6 @@ export default function UserFilters({ specialties, onSearch, isLoading, onSpecia
         onSearch({ name, specialtyId, is_active: !includeInactive });
     };
 
-    // Função para salvar a nova especialidade
     const handleSaveSpecialty = async () => {
         if (!newSpecialtyName.trim()) {
             toast.error("O nome da especialidade não pode estar vazio.");
@@ -40,12 +37,11 @@ export default function UserFilters({ specialties, onSearch, isLoading, onSpecia
         try {
             const response = await api.post('/specialties', { name: newSpecialtyName });
             
-            // Notifica a página pai com a nova especialidade retornada pela API
             onSpecialtyCreated(response.data);
 
             toast.success(`Especialidade "${newSpecialtyName}" criada com sucesso!`);
-            setIsModalOpen(false); // Fecha o modal
-            setNewSpecialtyName(''); // Limpa o campo
+            setIsModalOpen(false);
+            setNewSpecialtyName('');
         } catch (error: any) {
             if (error.response && error.response.data?.message.includes('duplicate key')) {
                 toast.error("Esta especialidade já existe.");

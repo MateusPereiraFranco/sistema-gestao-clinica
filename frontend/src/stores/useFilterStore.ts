@@ -72,7 +72,7 @@ export const useFilterStore = create<FilterState>()(
       setReportStartDate: (date) => set({ reportStartDate: date }),
       setReportEndDate: (date) => set({ reportEndDate: date }),
 
-      includeInactive: false, // Por defeito, não mostra os inativos.
+      includeInactive: false,
       setIncludeInactive: (value) => set({ includeInactive: value }),
     }),
     {

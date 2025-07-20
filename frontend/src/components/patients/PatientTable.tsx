@@ -9,7 +9,7 @@ interface PatientTableProps {
     patients: Patient[];
     isLoading: boolean;
     onLaunchService: (patient: Patient) => void;
-    onDeletePatient: (patientId: string) => void; // <-- Propriedade adicionada
+    onDeletePatient: (patientId: string) => void;
 }
 
 export default function PatientTable({ patients, isLoading, onLaunchService, onDeletePatient }: PatientTableProps) {
@@ -53,8 +53,7 @@ export default function PatientTable({ patients, isLoading, onLaunchService, onD
                                 <Link href={`/dashboard/pacientes/${patient.patient_id}/editar`} className="inline-flex items-center text-blue-600 hover:text-blue-900" title="Editar Paciente">
                                     <Pencil className="w-5 h-5"/>
                                 </Link>
-                                {user?.profile === 'master' && (
-                                    // O onClick agora chama a função recebida pela prop
+                                {user?.profile === 'master' || user?.profile === 'admin' && (
                                     <button onClick={() => onDeletePatient(patient.patient_id)} className="inline-flex items-center text-red-600 hover:text-red-900" title="Apagar Paciente">
                                         <Trash2 className="w-5 h-5"/>
                                     </button>

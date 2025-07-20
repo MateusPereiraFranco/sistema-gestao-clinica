@@ -40,10 +40,8 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
         const toastId = toast.loading("A gerar atendimento...");
         try {
             if (waitlistEntryId) {
-                // Se veio da confirmação do conflito, atualiza o registo existente para 'waiting'
                 await api.patch(`/appointments/${waitlistEntryId}/attend-from-waitlist`);
             } else {
-                // Senão, cria um novo atendimento avulso com status 'waiting'
                 await api.post('/appointments/on-demand', {
                     patient_id: patient!.patient_id,
                     professional_id: selectedProfessional,
@@ -70,12 +68,10 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
             toast.error("Por favor, selecione um vículo.");
             return;
         }
-        // Se o paciente está na lista de espera, mostra o modal de conflito primeiro.
         if (waitingListEntry) {
             setShowConflictModal(true);
             return;
         }
-        // Se não, gera o atendimento diretamente.
         await generateService();
     };
 

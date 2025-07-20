@@ -4,7 +4,7 @@ import { useState } from 'react';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import PasswordInput from '../ui/PasswordInput'; // Reutilizando o nosso componente
+import PasswordInput from '../ui/PasswordInput';
 
 export default function ChangePasswordForm() {
     const router = useRouter();
@@ -33,7 +33,6 @@ export default function ChangePasswordForm() {
                 newPassword,
             });
             toast.success("Palavra-passe atualizada com sucesso!", { id: toastId });
-            // Limpa os campos após o sucesso
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');

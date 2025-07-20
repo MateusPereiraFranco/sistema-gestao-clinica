@@ -1,7 +1,7 @@
 const patientService = require('./patientsService');
+const patientModel = require('./patientsModel')
 const auditLogModel = require('../auditLogs/auditLogModel');
 
-// O controller agora extrai os filtros dos query parameters da URL.
 exports.getAllPatients = async (req, res, next) => {
     try {
         const filters = req.query;
@@ -22,7 +22,7 @@ exports.getPatientForEdit = async (req, res, next) => {
     }
 };
 
-// ... (outras funções do controller permanecem as mesmas) ...
+
 exports.createPatient = async (req, res, next) => {
     try {
         const newPatient = await patientService.createPatient(req.body, req.user.user_id, req.user.unit_id);
@@ -30,7 +30,7 @@ exports.createPatient = async (req, res, next) => {
             user_id: req.user.user_id,
             action: 'CREATE_PATIENT',
             target_entity: 'patients',
-            target_id: newPatient.appointment_id,
+            target_id: newPatient.patient_id,
             details: { ...newPatient }
         });
         res.status(201).json(newPatient);
@@ -49,7 +49,7 @@ exports.getPatientById = async (req, res, next) => {
 };
 exports.updatePatient = async (req, res, next) => {
     try {
-        const originalPatient = await appointmentModel.findById(req.params.id);
+        const originalPatient = await patientModel.findById(req.params.id);
         const updatedPatient = await patientService.updatePatient(req.params.id, req.body, req.user);
         await auditLogModel.createLog({
             user_id: req.user.user_id,
@@ -86,7 +86,6 @@ exports.deletePatient = async (req, res, next) => {
     }
 };
 
-// NOVO CONTROLLER: Para a rota de histórico.
 exports.getPatientHistory = async (req, res, next) => {
     try {
         const { startDate, endDate, professional_id } = req.query;

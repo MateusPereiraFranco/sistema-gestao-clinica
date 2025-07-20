@@ -15,7 +15,6 @@ exports.getPatientForEdit = async (id, user) => {
     return patient;
 };
 
-// A validação foi atualizada para não exigir o campo 'observations'
 exports.createPatient = async (patientData, userId, user_unit_id) => {
     const requiredFields = [
         'name', 'birth_date', 'mother_name', 'cell_phone_1',
@@ -113,9 +112,7 @@ exports.deletePatient = async (id) => {
     }
 };
 
-// NOVA FUNÇÃO: Serviço para obter o histórico do paciente.
 exports.getPatientHistory = async (patientId, filters) => {
-    // Primeiro, busca o paciente para garantir que ele existe.
     const patient = await patientModel.findById(patientId);
     if (!patient) {
         const error = new Error('Paciente não encontrado.');
@@ -125,7 +122,6 @@ exports.getPatientHistory = async (patientId, filters) => {
     const { startDate, endDate, professional_id } = filters;
     const history = await patientModel.findHistoryByPatientId(patientId, startDate, endDate, professional_id);
 
-    // Retorna os dados do paciente e o seu histórico.
     return {
         patient_id: patient.patient_id,
         name: patient.name,

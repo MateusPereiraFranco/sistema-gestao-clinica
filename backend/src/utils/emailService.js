@@ -1,28 +1,43 @@
-const nodemailer = require('nodemailer');
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 
+const sesClient = new SESClient({ region: process.env.AWS_REGION });
+
+/**
+ * Envia um email usando o Amazon SES.
+ * @param {object} options - As opções do email.
+ * @param {string} options.email - O email do destinatário.
+ * @param {string} options.subject - O assunto do email.
+ * @param {string} options.message - O corpo do email em texto plano.
+ * @param {string} [options.html] - O corpo do email em HTML (opcional).
+ */
 const sendEmail = async (options) => {
-    // 1. Criar um "transportador" (o serviço que vai enviar o email)
-    const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true, // true para a porta 465, false para outras
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+    const params = {
+        Source: `Sistema Clínica IOA <${process.env.EMAIL_FROM}>`,
+        Destination: {
+            ToAddresses: [options.email],
         },
-    });
-
-    // 2. Definir as opções do email
-    const mailOptions = {
-        from: `Sistema Clínica IOA <${process.env.EMAIL_USER}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-        // html: para emails mais complexos com HTML
+        Message: {
+            Subject: {
+                Data: options.subject,
+                Charset: 'UTF-8',
+            },
+            Body: {
+                ...(options.html
+                    ? { Html: { Data: options.html, Charset: 'UTF-8' } }
+                    : { Text: { Data: options.message, Charset: 'UTF-8' } }
+                )
+            },
+        },
     };
 
-    // 3. Enviar o email
-    await transporter.sendMail(mailOptions);
+    try {
+        const command = new SendEmailCommand(params);
+        await sesClient.send(command);
+        console.log(`Email enviado com sucesso para ${options.email} via SES.`);
+    } catch (error) {
+        console.error("Falha ao enviar email via SES:", error);
+        throw new Error("Não foi possível enviar o email.");
+    }
 };
 
 module.exports = sendEmail;

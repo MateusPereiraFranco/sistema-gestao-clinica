@@ -20,7 +20,10 @@ export default function GerirUsuariosPage() {
     const [specialties, setSpecialties] = useState<Specialty[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchUsers = useCallback(async (filters: any = {}) => { // Tipado como 'any' para flexibilidade
+    const fetchUsers = useCallback(async (filters: any = {}) => {
+        if (!user) {
+            return;
+        }
         setIsLoading(true);
         if (filters.is_active === undefined) {
             filters.is_active = true;
@@ -33,7 +36,7 @@ export default function GerirUsuariosPage() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         if (user && user.profile === 'normal') {
@@ -42,26 +45,19 @@ export default function GerirUsuariosPage() {
         }
         
         fetchUsers();
-        api.get('/specialties').then(res => setSpecialties(res.data));
+
+        if (user) {
+            api.get('/specialties').then(res => setSpecialties(res.data));
+        }
     }, [user, router, fetchUsers]);
 
-    // ====================================================================
-    // FUNÇÕES ADICIONADAS
-    // ====================================================================
-
-    // 1. Função para lidar com a busca vinda do componente de filtros
     const handleSearch = (filters: { name: string; specialtyId: string, is_active: boolean }) => {
-        // Simplesmente chama a função de busca principal com os filtros recebidos
         fetchUsers(filters);
     };
 
-    // 2. Função para atualizar a lista de especialidades após a criação de uma nova
     const handleSpecialtyCreated = (newSpecialty: Specialty) => {
-        // Adiciona a nova especialidade ao estado, o que atualiza a UI
         setSpecialties(prevSpecialties => [...prevSpecialties, newSpecialty]);
     };
-
-    // ====================================================================
 
     const handleDeleteUser = async (userId: string) => {
         // O uso de window.confirm não é ideal, mas mantendo por consistência

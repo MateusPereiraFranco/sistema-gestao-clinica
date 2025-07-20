@@ -190,7 +190,7 @@ exports.create = async ({ patient_id, professional_id, unit_id, appointment_date
     `;
     const params = [
         patient_id, professional_id, unit_id,
-        appointment_datetime, // Pode ser nulo, e o COALESCE usará NOW()
+        appointment_datetime,
         service_type,
         status || 'scheduled',
         observations,
@@ -226,7 +226,6 @@ exports.findByProfessionalAndDateTime = async (professionalId, dateTime) => {
     return rows[0];
 };
 
-// NOVA FUNÇÃO: Busca uma entrada específica na lista de espera para um paciente/profissional.
 exports.findWaitingListEntry = async (patientId, professionalId) => {
     const query = `
         SELECT 
@@ -242,7 +241,6 @@ exports.findWaitingListEntry = async (patientId, professionalId) => {
     return rows[0];
 };
 
-// NOVA FUNÇÃO: Atualiza um agendamento da lista de espera para um agendamento agendado.
 exports.updateFromWaitingListToScheduled = async (appointmentId, newDateTime) => {
     const query = `
         UPDATE appointments 
@@ -254,7 +252,6 @@ exports.updateFromWaitingListToScheduled = async (appointmentId, newDateTime) =>
     return rows[0];
 };
 
-// NOVA FUNÇÃO: Atualiza um agendamento da lista de espera para um atendimento em andamento.
 exports.updateFromWaitingListToInProgress = async (appointmentId) => {
     const query = `
         UPDATE appointments 

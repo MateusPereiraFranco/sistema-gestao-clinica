@@ -1,7 +1,6 @@
 const db = require('../../config/db');
 const { hashPassword } = require('../../utils/passwordUtil');
 
-// Modificado para usar 'specialty_id'
 exports.create = async ({ unit_id, name, email, password, profile, specialty_id, has_agenda }) => {
     const hashedPassword = await hashPassword(password);
     const query = `
@@ -26,7 +25,6 @@ exports.findAllActive = async () => {
     return rows;
 };
 
-// Modificado para incluir o nome da especialidade através de um JOIN
 exports.findAll = async (filters = {}) => {
     const { profile, unitId, name, specialtyId, has_agenda, is_active } = filters;
     let query = `

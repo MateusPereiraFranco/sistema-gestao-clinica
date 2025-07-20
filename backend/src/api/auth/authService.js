@@ -24,17 +24,14 @@ exports.updatePassword = async (userId, currentPassword, newPassword) => {
         throw error;
     }
 
-    // 1. Busca os dados frescos e completos do utilizador, incluindo o hash.
     const user = await userModel.findById(userId);
 
-    // Medida de segurança extra, embora o token deva garantir isto.
     if (!user) {
         const error = new Error('Utilizador não encontrado.');
         error.statusCode = 404;
         throw error;
     }
 
-    // 2. Compara a palavra-passe atual com o hash obtido.
     const isMatch = await comparePassword(currentPassword, user.password_hash);
     if (!isMatch) {
         const error = new Error('A sua palavra-passe atual está incorreta.');
@@ -42,11 +39,9 @@ exports.updatePassword = async (userId, currentPassword, newPassword) => {
         throw error;
     }
 
-    // 3. Gera o novo hash e atualiza na base de dados.
     const hashedNewPassword = await hashPassword(newPassword);
     await userModel.updatePassword(user.user_id, hashedNewPassword);
 
-    // 4. Gera um novo token.
     const token = jwt.sign({ id: user.user_id, profile: user.profile }, process.env.JWT_SECRET, { expiresIn: '8h' });
     return { token };
 };
@@ -54,18 +49,15 @@ exports.updatePassword = async (userId, currentPassword, newPassword) => {
 exports.requestPasswordReset = async (email) => {
     const user = await userModel.findByEmail(email);
     if (!user) {
-        // Por segurança, não revelamos se o email existe.
-        // A função simplesmente termina aqui.
         return;
     }
 
     const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await authModel.createPasswordResetToken(email, hashedToken, expiresAt);
 
-    // 2. Preparar e enviar o email
     const message = `Você solicitou a redefinição de senha. Use o seguinte código para continuar:\n\n${resetToken}\n\nSe você não solicitou isto, por favor ignore este email. O código é válido por 10 minutos.`;
 
     try {
@@ -75,7 +67,6 @@ exports.requestPasswordReset = async (email) => {
             message,
         });
     } catch (error) {
-        // Se o email falhar, limpamos o token para que o utilizador possa tentar novamente.
         await authModel.deleteResetToken(email);
         throw new Error('Houve um erro ao enviar o email. Tente novamente mais tarde.');
     }
@@ -83,7 +74,6 @@ exports.requestPasswordReset = async (email) => {
     return { message: "Se o email estiver registado, um código de recuperação foi enviado." };
 };
 
-// NOVA FUNÇÃO: Para redefinir a senha com o código.
 exports.resetPassword = async (email, token, newPassword) => {
     const resetEntry = await authModel.findResetTokenByEmail(email);
 

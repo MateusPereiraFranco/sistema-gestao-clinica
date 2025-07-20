@@ -5,7 +5,6 @@ const { protect, restrictTo } = require('../../middlewares/authMiddleware');
 const router = Router();
 router.use(protect);
 
-// Todos os utilizadores autenticados podem ver a lista de unidades.
 router.get('/', unitsController.getAllUnits);
 router.post('/', restrictTo('admin'), unitsController.createUnit);
 
