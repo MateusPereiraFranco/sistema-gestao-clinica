@@ -1,13 +1,15 @@
 import { statusLabels } from './statusUtils';
+import { AppointmentStatus, Appointment } from '@/types';
 
 export function exportGroupedWithDetailsToCSV(
   summaryData: any[], 
-  detailsData: Record<string, any[]>, 
+  detailsData: Record<string, Appointment[]>,
   filename: string
 ) {
     const mainHeaders = ["Profissional", "Especialidade", "Vínculo - Saúde", "Vínculo - Educação", "Vínculo - AMA", "Vínculo - Nenhum", "Total"];
     let csvRows = [mainHeaders.join(';')];
 
+    // Cabeçalho para a seção de detalhes dos atendimentos
     const detailHeaders = ["", "Data/Hora", "Paciente", "CPF", "Vínculo", "Status", "Observações"];
 
     for (const summaryRow of summaryData) {
@@ -29,11 +31,12 @@ export function exportGroupedWithDetailsToCSV(
 
             for (const detail of details) {
                 const detailValues = [
+                    "",
                     `"${detail.date_formatted || detail.appointment_datetime} às ${detail.time}"`,
                     `"${detail.patient_name}"`,
                     `"${detail.patient_cpf || 'N/A'}"`,
                     `"${detail.vinculo}"`,
-                    `"${statusLabels[detail.status] || detail.status}"`,
+                    `"${statusLabels[detail.status as AppointmentStatus] || detail.status}"`,
                     `"${(detail.observations || '').replace(/"/g, '""')}"`
                 ];
                 csvRows.push(detailValues.join(';'));

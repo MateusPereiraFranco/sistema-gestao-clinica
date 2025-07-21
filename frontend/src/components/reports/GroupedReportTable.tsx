@@ -37,21 +37,18 @@ interface ReportTableProps {
 export default function GroupedReportTable({ data, period, filters, token }: ReportTableProps) {
     const [expandedProfessionalDetails, setExpandedProfessionalDetails] = useState<Record<string, Appointment[]>>({});
     const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
+    const [isExporting, setIsExporting] = useState(false);
 
     if (data.length === 0) {
         return <p className="text-center text-gray-500 py-8">Nenhum dado para exibir.</p>;
     }
 
     const grandTotal = data.reduce((sum, item) => sum + item.total, 0);
-
-    const [isExporting, setIsExporting] = useState(false);
     
     const handleExport = async () => {
         setIsExporting(true);
         toast.loading('Preparando dados para exportação...');
-
         try {
-
             const allDetails = { ...expandedProfessionalDetails };
 
             const detailPromises = data
@@ -155,9 +152,13 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                     <h3 className="text-lg font-semibold text-gray-800">Relatório de Atendimentos por Profissional</h3>
                     <p className="text-sm text-gray-500">Período: {period}</p>
                 </div>
-                <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-green-700">
+                <button 
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-green-700 disabled:bg-green-400"
+                >
                     <Download size={16}/>
-                    Exportar para CSV
+                    {isExporting ? 'A exportar...' : 'Exportar para CSV'}
                 </button>
             </div>
             <div className="space-y-4">
@@ -172,7 +173,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                         <p className="font-bold text-indigo-700">{item.professional_name}</p>
                                         <p className="text-sm text-gray-500">{item.specialty_name || 'N/A'}</p>
                                     </div>
-                                    <div className="text-right flex items-center gap-4"> {/* Adicionado flex para o botão */}
+                                    <div className="text-right flex items-center gap-4">
                                         <div>
                                             <p className="text-sm text-gray-500">Total de Atendimentos</p>
                                             <p className="font-bold text-xl text-gray-800">{item.total}</p>
@@ -189,11 +190,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
                                             ) : (
-                                                isExpanded ? (
-                                                    <ChevronUp size={20} className="text-gray-600" />
-                                                ) : (
-                                                    <ChevronDown size={20} className="text-gray-600" />
-                                                )
+                                                isExpanded ? <ChevronUp size={20} className="text-gray-600" /> : <ChevronDown size={20} className="text-gray-600" />
                                             )}
                                         </button>
                                     </div>
@@ -208,39 +205,39 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                             {isExpanded && (
                                 <div className="overflow-x-auto bg-gray-50 p-4 rounded-lg mt-2 border border-gray-200">
                                     <h4 className="text-md font-semibold mb-3 text-gray-700">Detalhes dos Atendimentos de {item.professional_name}:</h4>
-        
+    
                                     {expandedProfessionalDetails[item.user_id]?.length > 0 ? (
-                                    <table className="min-w-full w-full text-sm text-left">
-                                        <thead className="bg-gray-100">
-                                            <tr>
-                                                <th className="p-2 font-semibold text-gray-600">Data/Hora</th>
-                                                <th className="p-2 font-semibold text-gray-600">Paciente</th>
-                                                <th className="p-2 font-semibold text-gray-600">CPF</th>
-                                                <th className="p-2 font-semibold text-gray-600">Vínculo</th>
-                                                <th className="p-2 font-semibold text-gray-600">Status</th>
-                                                <th className="p-2 font-semibold text-gray-600">Obs.</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {expandedProfessionalDetails[item.user_id].map((detail) => (
-                                                <tr key={detail.appointment_id} className="border-b border-gray-200 hover:bg-gray-100">
-                                                    <td className="p-2 text-gray-700 whitespace-nowrap">
-                                                        {formatDateForDisplay(detail.appointment_datetime)} às {detail.time}
-                                                    </td>
-                                                    <td className="p-2 text-gray-700">{detail.patient_name}</td>
-                                                    <td className="p-2 text-gray-700">{detail.patient_cpf || 'N/A'}</td>
-                                                    <td className="p-2 text-gray-700">{detail.vinculo}</td>
-                                                    <td className="p-2 text-gray-700">{statusLabels[detail.status as AppointmentStatus] || detail.status}</td>
-                                                    <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations || 'N/A'}>
-                                                        {detail.observations || 'N/A'}
-                                                    </td>
+                                        <table className="min-w-full w-full text-sm text-left">
+                                            <thead className="bg-gray-100">
+                                                <tr>
+                                                    <th className="p-2 font-semibold text-gray-600">Data/Hora</th>
+                                                    <th className="p-2 font-semibold text-gray-600">Paciente</th>
+                                                    <th className="p-2 font-semibold text-gray-600">CPF</th>
+                                                    <th className="p-2 font-semibold text-gray-600">Vínculo</th>
+                                                    <th className="p-2 font-semibold text-gray-600">Status</th>
+                                                    <th className="p-2 font-semibold text-gray-600">Obs.</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                    ) : (
-                                        <p className="text-gray-600 text-center py-4">Nenhum detalhe de atendimento encontrado para este profissional no período e com o filtro de status selecionado.</p>
-                                    )}
+                                            </thead>
+                                            <tbody>
+                                                {expandedProfessionalDetails[item.user_id].map((detail) => (
+                                                    <tr key={detail.appointment_id} className="border-b border-gray-200 hover:bg-gray-100">
+                                                        <td className="p-2 text-gray-700 whitespace-nowrap">
+                                                            {formatDateForDisplay(detail.appointment_datetime)} às {detail.time}
+                                                        </td>
+                                                        <td className="p-2 text-gray-700">{detail.patient_name}</td>
+                                                        <td className="p-2 text-gray-700">{detail.patient_cpf || 'N/A'}</td>
+                                                        <td className="p-2 text-gray-700">{detail.vinculo}</td>
+                                                        <td className="p-2 text-gray-700">{statusLabels[detail.status as AppointmentStatus] || detail.status}</td>
+                                                        <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations || 'N/A'}>
+                                                            {detail.observations || 'N/A'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        ) : (
+                                            <p className="text-gray-600 text-center py-4">Nenhum detalhe de atendimento encontrado para este profissional no período e com o filtro de status selecionado.</p>
+                                        )}
                                 </div>
                             )}
                         </React.Fragment>

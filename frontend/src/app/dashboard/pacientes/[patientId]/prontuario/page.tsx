@@ -44,7 +44,6 @@ export default function ProntuarioPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Estados para os filtros de data
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
@@ -85,7 +84,7 @@ export default function ProntuarioPage() {
             } catch (error) { console.error(error); }
         };
         fetchProfessionals();
-    }, [user, setDashboardProfessional]);
+    }, [user, setDashboardProfessional, dashboardProfessional]);
 
     return (
         <>

@@ -16,7 +16,7 @@ export function useFutureScheduleCheck(patientId?: string, professional_id?: str
         } else {
             setFutureAppointment(null);
         }
-    }, [patientId]);
+    }, [patientId, professional_id]);
 
     return { futureAppointment, isLoading };
 }
