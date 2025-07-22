@@ -2,7 +2,7 @@ const userModel = require('./usersModel');
 
 exports.createUser = async (userData, requestingUser) => {
     const { email, password, name, specialty_id, has_agenda } = userData;
-    if (!email || !password || !name || !specialty_id || !has_agenda) {
+    if (!email || !password || !name || !specialty_id) {
         const error = new Error('Nome, email e palavra-passe são obrigatórios.');
         error.statusCode = 400;
         throw error;

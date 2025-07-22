@@ -33,15 +33,42 @@ export default function UserForm({ userToEdit }: UserFormProps) {
     });
 
     useEffect(() => {
-        if (loggedInUser?.profile === 'admin') {
-            api.get('/units').then(res => setUnits(res.data));
-        }
-        api.get('/specialties').then(res => {
-            setSpecialties(res.data);
-            if (!isEditing && res.data.length > 0) {
-                setFormData(prev => ({ ...prev, specialty_id: res.data[0].specialty_id }));
+        const fetchDropdownData = async () => {
+            try {
+                const promises = [
+                    api.get('/specialties'),
+                    loggedInUser?.profile === 'admin' ? api.get('/units') : Promise.resolve({ data: [] })
+                ];
+
+                const [specialtiesRes, unitsRes] = await Promise.all(promises);
+
+                const fetchedSpecialties = specialtiesRes.data;
+                const fetchedUnits = unitsRes.data;
+
+                setSpecialties(fetchedSpecialties);
+                setUnits(fetchedUnits);
+
+                setFormData(prev => {
+                    const newFormData = { ...prev };
+
+                    if (!isEditing && fetchedSpecialties.length > 0) {
+                        newFormData.specialty_id = fetchedSpecialties[0].specialty_id;
+                    }
+
+                    if (loggedInUser?.profile === 'admin' && !prev.unit_id && fetchedUnits.length > 0) {
+                        newFormData.unit_id = fetchedUnits[0].unit_id;
+                    }
+                    
+                    return newFormData;
+                });
+
+            } catch (error) {
+                toast.error("Falha ao carregar dados do formulário.");
+                console.error("Error fetching form data:", error);
             }
-        });
+        };
+
+        fetchDropdownData();
     }, [loggedInUser, isEditing]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -55,6 +82,8 @@ export default function UserForm({ userToEdit }: UserFormProps) {
         try {
             if (isEditing) {
                 const { password, ...updateData } = formData;
+                if (!updateData.unit_id) delete (updateData as Partial<typeof updateData>).unit_id;
+                
                 const dataToSend = password ? formData : updateData;
                 await api.put(`/users/${userToEdit.user_id}`, dataToSend);
                 toast.success("Utilizador atualizado com sucesso!");
@@ -69,8 +98,10 @@ export default function UserForm({ userToEdit }: UserFormProps) {
             setIsLoading(false);
         }
     };
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
+            {/* O seu JSX permanece o mesmo */}
             <div>
                 <h2 className="text-xl font-semibold text-gray-900">Detalhes do Utilizador</h2>
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -138,11 +169,10 @@ export default function UserForm({ userToEdit }: UserFormProps) {
                 </div>
             </div>
 
-            {/* Botões de Ação */}
             <div className="mt-8 flex items-center justify-end gap-x-6 border-t pt-6">
                 <button type="button" onClick={() => router.back()} className="text-sm font-semibold leading-6 text-gray-900">Cancelar</button>
                 <button type="submit" disabled={isLoading} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-indigo-400">
-                    {isLoading ? 'A criar...' : 
+                    {isLoading ? (isEditing ? 'A editar...' : 'A criar...') : 
                     isEditing ? 'Editar Utilizador' : 'Criar Utilizador'}
                 </button>
             </div>
