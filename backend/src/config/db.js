@@ -1,15 +1,19 @@
 const { Pool } = require('pg');
 
 let pool;
+
 if (process.env.NODE_ENV === 'production') {
-    // Em produção, usa a URL de conexão única (DB_URL)
-    console.log('A conectar à base de dados de produção...');
     pool = new Pool({
         connectionString: process.env.DB_URL,
         ssl: {
             rejectUnauthorized: false
         }
     });
+
+    pool.on('connect', (client) => {
+        client.query("SET TIME ZONE 'America/Sao_Paulo'");
+    });
+
 } else {
     console.log('A conectar à base de dados de desenvolvimento local...');
     pool = new Pool({

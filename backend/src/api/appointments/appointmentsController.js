@@ -142,7 +142,6 @@ exports.checkWaitingList = async (req, res, next) => {
 
 exports.scheduleFromWaitlist = async (req, res, next) => {
     try {
-        const { newDateTime } = req.body;
         const updatedAppointment = await appointmentService.scheduleFromWaitlist(req.params.id, newDateTime);
         res.status(200).json(updatedAppointment);
     } catch (error) {
