@@ -74,7 +74,7 @@ exports.createAppointment = async (appointmentData) => {
 };
 
 exports.addToWaitingList = async (data, loggedInUserId) => {
-    const { patient_id, professional_id, vinculo, request_date } = data;
+    const { patient_id, professional_id, vinculo, request_date, observations } = data;
     if (!patient_id || !professional_id || !request_date) {
         throw new Error("Dados insuficientes para adicionar à lista de espera.");
     }
@@ -96,7 +96,7 @@ exports.addToWaitingList = async (data, loggedInUserId) => {
         unit_id: professional.unit_id,
         appointment_datetime,
         service_type: specialtyName,
-        observations: 'Adicionado à lista de espera.',
+        observations: observations || 'Adicionado à lista de espera.',
         status: 'on_waiting_list',
         created_by: loggedInUserId
     };

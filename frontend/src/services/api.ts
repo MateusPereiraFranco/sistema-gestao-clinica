@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import toast from 'react-hot-toast';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 api.interceptors.response.use(
@@ -11,18 +11,17 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response && error.response.status === 401) {
+        const originalRequestUrl = error.config.url;
+        if (error.response?.status === 401 && !originalRequestUrl.includes('/auth/update-password')) {
             
             const { user } = useAuthStore.getState();
 
             if (user) {
-                toast.error("Sua sessão expirou. Por favor, faça login novamente.");
+                toast.error("A sua sessão expirou. Por favor, faça login novamente.");
                 useAuthStore.getState().logout();
-
                 window.location.href = '/login';
             }
         }
-
         return Promise.reject(error);
     }
 );

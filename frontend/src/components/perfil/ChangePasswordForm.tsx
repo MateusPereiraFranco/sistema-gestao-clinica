@@ -33,11 +33,22 @@ export default function ChangePasswordForm() {
                 newPassword,
             });
             toast.success("Palavra-passe atualizada com sucesso!", { id: toastId });
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
+            
+            // Redireciona o utilizador para o dashboard após um breve momento
+            setTimeout(() => {
+                router.push('/dashboard');
+            }, 1500); // 1.5 segundos de espera para o utilizador ler o toast
+
         } catch (error: any) {
-            toast.error(error.response?.data?.error || "Falha ao atualizar a palavra-passe.", { id: toastId });
+            // AQUI ESTÁ A MUDANÇA: Tratamento de erro local
+            if (error.response && error.response.status === 401) {
+                // Se o erro for 401 (Unauthorized), significa que a senha atual está errada.
+                // Mostramos uma mensagem específica e não deixamos o interceptor global agir.
+                toast.error("A sua palavra-passe atual está incorreta.", { id: toastId });
+            } else {
+                // Para qualquer outro erro, mostramos a mensagem do backend ou uma genérica.
+                toast.error(error.response?.data?.message || "Falha ao atualizar a palavra-passe.", { id: toastId });
+            }
         } finally {
             setIsLoading(false);
         }

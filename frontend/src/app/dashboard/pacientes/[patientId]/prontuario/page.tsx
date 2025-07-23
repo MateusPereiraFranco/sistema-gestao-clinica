@@ -137,6 +137,7 @@ export default function ProntuarioPage() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profissional</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Especialidade</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vínculo</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Observação</th>
                                     <th className="relative px-6 py-3"><span className="sr-only">Ação</span></th>
                                 </tr>
@@ -149,6 +150,7 @@ export default function ProntuarioPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">{item.professional_name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">{item.service_type}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={item.status} /></td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{item.vinculo}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">{item.observations}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             {item.status === 'completed' && (

@@ -57,7 +57,7 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-700">{item.professional_name}</td>
                                 <td className="px-6 py-4 text-sm text-gray-700">{item.date_formatted}</td>
-                                {item.service_type && item.service_type === 'Retorno' ? (
+                                {item.service_type? (
                                     <td className="px-6 py-4 text-sm text-gray-700">{item.observations}</td>
                                 ) : (
                                     <td className="px-6 py-4 text-sm text-gray-700">N/A</td>

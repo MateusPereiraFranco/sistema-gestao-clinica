@@ -35,10 +35,10 @@ const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
 
 const getVinculoStyle = (vinculo: PatientVinculo | null) => {
     switch (vinculo) {
-        case 'saude': return { borderColor: 'border-blue-500', textColor: 'text-blue-700' };
-        case 'educação': return { borderColor: 'border-green-500', textColor: 'text-green-700' };
-        case 'AMA': return { borderColor: 'border-pink-500', textColor: 'text-pink-700' };
-        default: return { borderColor: 'border-indigo-500', textColor: 'text-indigo-700' };
+        case 'saude': return { bg: 'bg-pink-50', textColor: 'text-pink-800', borderColor: 'border-pink-500' };
+        case 'educação': return { bg: 'bg-green-50', textColor: 'text-green-800', borderColor: 'border-green-500' };
+        case 'AMA': return { bg: 'bg-blue-50', textColor: 'text-blue-800', borderColor: 'border-blue-500' };
+        default: return { bg: 'bg-indigo-50', textColor: 'text-indigo-800', borderColor: 'border-indigo-500' };
     }
 }
 

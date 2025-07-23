@@ -17,12 +17,13 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [requestDate, setRequestDate] = useState(new Date().toISOString().split('T')[0]);
+    const [requestObservations, setRequestObservations] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (patient) {
-            api.get('/users').then(res => {
-                const profList = res.data.filter((u: User) => u.profile === 'normal');
+            api.get('/users', {params: {is_active: true}}).then(res => {
+                const profList = res.data.filter((u: User) => u.has_agenda === true);
                 setProfessionals(profList);
                 if (profList.length > 0) setSelectedProfessional(profList[0].user_id);
             });
@@ -43,7 +44,6 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                 params: {
                     patientId: patient.patient_id,
                     professionalId: selectedProfessional,
-                    vinculo: vinculo
                 }
             });
 
@@ -64,6 +64,7 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                 professional_id: selectedProfessional,
                 vinculo: vinculo,
                 request_date: requestDate,
+                observations: requestObservations
             });
             toast.success(`${patient.name} adicionado à lista de espera.`, { id: toastId });
             onPatientAdded();
@@ -109,6 +110,13 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Data da Solicitação</label>
                         <input type="date" value={requestDate} onChange={e => setRequestDate(e.target.value)} className="mt-1 w-full p-2 border rounded-md"/>
+                    </div>
+                    <div>
+                    <label className="block text-sm font-medium text-gray-700">Observação</label>
+                    <textarea id="observations" rows={3} value={requestObservations} onChange={(e) => setRequestObservations(e.target.value)}
+                                className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Alguma nota importante?"
+                            />
                     </div>
                 </div>
                 <div className="flex justify-end gap-4 mt-6 pt-4 border-t">
