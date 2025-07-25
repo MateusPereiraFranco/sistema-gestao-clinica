@@ -29,4 +29,7 @@ router.patch('/:id/start-service', appointmentController.startService);
 
 router.get('/detailed-report', appointmentController.getDetailedReportAppointments);
 
+router.post('/recurring', appointmentController.createRecurringAppointments);
+router.delete('/recurring/:groupId', appointmentController.deleteRecurringAppointments);
+
 module.exports = router;

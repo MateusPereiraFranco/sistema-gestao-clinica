@@ -1,4 +1,6 @@
 const db = require('../../config/db');
+const { addMonths, addDays, isBefore, format } = require('date-fns');
+const { v4: uuidv4 } = require('uuid');
 
 exports.findByProfessionalAndDate = async (professionalId, date) => {
     const query = `
@@ -29,7 +31,7 @@ exports.findAppointments = async (filters) => {
             apt.appointment_id, apt.professional_id, apt.appointment_datetime,
             to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') as time,
             to_char(apt.appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as date_formatted,
-            apt.service_type, apt.status, apt.observations, apt.vinculo,
+            apt.service_type, apt.status, apt.observations, apt.vinculo, apt.recurring_group_id,
             p.patient_id, p.name as patient_name, p.cpf as patient_cpf, p.cns as patient_cns, 
             to_char(p.birth_date AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') as patient_birth_date,
             p.mother_name as patient_mother_name,
@@ -261,4 +263,105 @@ exports.updateFromWaitingListToInProgress = async (appointmentId) => {
     `;
     const { rows } = await db.query(query, [appointmentId]);
     return rows[0];
+};
+
+exports.createRecurring = async (baseAppointment, durationInMonths) => {
+    // 1. Busca o unit_id do profissional para garantir que temos o valor correto
+    const professionalQuery = 'SELECT unit_id FROM users WHERE user_id = $1';
+    const { rows: professionalRows } = await db.query(professionalQuery, [baseAppointment.professional_id]);
+
+    if (professionalRows.length === 0) {
+        throw new Error('Profissional não encontrado para criar agendamentos recorrentes.');
+    }
+    const professionalUnitId = professionalRows[0].unit_id;
+    if (!professionalUnitId) {
+        const error = new Error('O profissional selecionado não está associado a uma unidade.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const startDate = new Date(baseAppointment.appointment_datetime);
+    const endDate = addMonths(startDate, durationInMonths);
+
+    const appointmentDates = [];
+    // Começa a calcular a partir da semana seguinte para evitar conflito com o dia atual.
+    let currentDate = addDays(startDate, 7);
+
+    while (isBefore(currentDate, endDate)) {
+        appointmentDates.push(new Date(currentDate));
+        currentDate = addDays(currentDate, 7);
+    }
+
+    if (appointmentDates.length === 0) {
+        return [];
+    }
+
+    const conflictCheckQuery = `
+        SELECT to_char(appointment_datetime AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as formatted_datetime 
+        FROM appointments 
+        WHERE professional_id = $1 
+        AND status IN ('scheduled', 'waiting', 'in_progress')
+        AND appointment_datetime = ANY($2::timestamptz[])
+    `;
+    const { rows: conflicts } = await db.query(conflictCheckQuery, [baseAppointment.professional_id, appointmentDates]);
+
+    if (conflicts.length > 0) {
+        const conflictTimes = conflicts.map(c => c.formatted_datetime).join(', ');
+        const error = new Error(`Não foi possível criar a série. Os seguintes horários já estão ocupados: ${conflictTimes}`);
+        error.statusCode = 409;
+        throw error;
+    }
+
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        const recurring_group_id = uuidv4();
+        const createdAppointments = [];
+
+        for (const date of appointmentDates) {
+            const query = `
+                INSERT INTO appointments (
+                    patient_id, professional_id, unit_id, appointment_datetime, 
+                    service_type, status, observations, created_by, vinculo, recurring_group_id
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                RETURNING *;
+            `;
+            const params = [
+                baseAppointment.patient_id,
+                baseAppointment.professional_id,
+                professionalUnitId, // 2. Usa o unit_id que buscámos, em vez do que veio do frontend
+                date,
+                baseAppointment.service_type,
+                'scheduled',
+                baseAppointment.observations,
+                baseAppointment.created_by,
+                baseAppointment.vinculo,
+                recurring_group_id
+            ];
+
+            const { rows } = await client.query(query, params);
+            createdAppointments.push(rows[0]);
+        }
+
+        await client.query('COMMIT');
+        return createdAppointments;
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+
+exports.deleteByGroupId = async (groupId) => {
+    const query = `
+        DELETE FROM appointments 
+        WHERE recurring_group_id = $1 
+        AND appointment_datetime >= NOW();
+    `;
+    const result = await db.query(query, [groupId]);
+    return result.rowCount;
 };

@@ -27,7 +27,7 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
 
     useEffect(() => {
         if (patient) {
-            api.get('/users').then(res => {
+            api.get('/users', {params: {is_active: true}}).then(res => {
                 const professionalList = res.data.filter((u: User) => u.has_agenda === true);
                 setProfessionals(professionalList);
                 if (professionalList.length > 0) setSelectedProfessional(professionalList[0].user_id);

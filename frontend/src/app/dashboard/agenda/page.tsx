@@ -11,6 +11,7 @@ import NewAppointmentModal from "@/components/agenda/NewAppointmentModal";
 import MissedAppointmentModal from "@/components/agenda/MissedAppointmentModal";
 import toast from "react-hot-toast";
 import { useFilterStore } from "@/stores/useFilterStore";
+import RecurringAppointmentModal from "@/components/agenda/RecurringAppointmentModal";
 
 export default function AgendaPage() {
     const { user } = useAuthStore();
@@ -25,6 +26,10 @@ export default function AgendaPage() {
     const [isMissedModalOpen, setIsMissedModalOpen] = useState(false);
     const [appointmentForModal, setAppointmentForModal] = useState<Appointment | null>(null);
     const [selectedSlot, setSelectedSlot] = useState('');
+
+    const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+    const [appointmentToMakeRecurring, setAppointmentToMakeRecurring] = useState<Appointment | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchAgendaData = useCallback(async () => {
         if (isFetchingProfessionals || !agendaProfessional) return;
@@ -70,6 +75,67 @@ export default function AgendaPage() {
     useEffect(() => {
         fetchAgendaData();
     }, [fetchAgendaData]);
+
+    const handleCreateAppointment = async (appointmentData: any) => {
+        setIsSubmitting(true);
+        const toastId = toast.loading("A agendar...");
+        try {
+            const { waitlistEntryId, ...data } = appointmentData;
+            if (waitlistEntryId) {
+                await api.patch(`/appointments/${waitlistEntryId}/schedule-from-waitlist`, { newDateTime: data.appointment_datetime });
+            } else {
+                await api.post('/appointments', data);
+            }
+            toast.success("Agendamento criado com sucesso!", { id: toastId });
+            setIsNewAppointmentModalOpen(false);
+            fetchAgendaData();
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Falha ao criar agendamento.", { id: toastId });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    const handleOpenRecurringModal = (appointment: Appointment) => {
+        setAppointmentToMakeRecurring(appointment);
+        setIsRecurringModalOpen(true);
+    };
+
+    // FUNÇÃO COMPLETA ADICIONADA
+    const handleConfirmRecurring = async (durationInMonths: number) => {
+        if (!appointmentToMakeRecurring) return;
+        setIsSubmitting(true);
+        try {
+            await api.post('/appointments/recurring', {
+                appointmentData: appointmentToMakeRecurring,
+                durationInMonths: durationInMonths,
+            });
+            toast.success("Agendamentos recorrentes criados com sucesso!");
+            setIsRecurringModalOpen(false);
+            setAppointmentToMakeRecurring(null);
+            fetchAgendaData();
+        } catch (error) {
+            toast.error("Falha ao criar agendamentos recorrentes.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // FUNÇÃO COMPLETA ADICIONADA
+    const handleCancelSeries = async (groupId: string) => {
+        if (window.confirm("Tem a certeza que deseja apagar todos os agendamentos futuros desta série?")) {
+            setIsSubmitting(true);
+            try {
+                await api.delete(`/appointments/recurring/${groupId}`);
+                toast.success("Série de agendamentos cancelada.");
+                fetchAgendaData();
+            } catch (error) {
+                toast.error("Falha ao cancelar a série.");
+            } finally {
+                setIsSubmitting(false);
+            }
+        }
+    };
     
     const handleCheckIn = async (appointmentId: string) => {
         const toastId = toast.loading("A fazer check-in...");
@@ -103,7 +169,7 @@ export default function AgendaPage() {
             try {
                 await api.patch(`/appointments/${appointmentId}/cancel`);
                 toast.success("Agendamento cancelado.", { id: toastId });
-                fetchAgendaData(); // Recarrega a agenda para mostrar o novo status
+                fetchAgendaData();
             } catch (error: any) {
                 toast.error(error.response?.data?.error || "Falha ao cancelar.", { id: toastId });
             }
@@ -115,32 +181,44 @@ export default function AgendaPage() {
             <Header title="Agenda do Dia" />
             <main className="flex-1 overflow-y-auto p-6">
                  <AgendaFilters 
-                    professionals={professionals}
-                />
-               
-                <AgendaTimeSlots 
-                    appointments={appointments}
-                    isLoading={isLoading}
-                    onCheckIn={handleCheckIn}
-                    onMarkAsMissed={handleOpenMissedModal}
-                    onCancel={handleCancelAppointment}
-                    onScheduleClick={handleOpenNewAppointmentModal}
-                    refreshAgenda={fetchAgendaData}
-                />
+                     professionals={professionals}
+                 />
+                
+                 <AgendaTimeSlots 
+                     appointments={appointments}
+                     isLoading={isLoading}
+                     onCheckIn={handleCheckIn}
+                     onMarkAsMissed={handleOpenMissedModal}
+                     onCancel={handleCancelAppointment}
+                     onScheduleClick={handleOpenNewAppointmentModal}
+                     refreshAgenda={fetchAgendaData}
+                     onMakeRecurring={handleOpenRecurringModal}
+                     onCancelSeries={handleCancelSeries}
+                 />
             </main>
             <NewAppointmentModal 
                 isOpen={isNewAppointmentModalOpen}
                 onClose={() => setIsNewAppointmentModalOpen(false)}
-                onAppointmentCreated={fetchAgendaData}
+                onConfirm={handleCreateAppointment}
                 slot={selectedSlot}
                 date={agendaDate}
                 professionalId={agendaProfessional}
+                isSubmitting={isSubmitting}
             />
             <MissedAppointmentModal 
                 isOpen={isMissedModalOpen}
                 appointment={appointmentForModal}
                 onClose={handleCloseMissedModal}
                 onUpdate={fetchAgendaData}
+            />
+            <RecurringAppointmentModal
+              isOpen={isRecurringModalOpen}
+              onClose={() => {
+                setIsRecurringModalOpen(false);
+                setAppointmentToMakeRecurring(null);
+              }}
+              onConfirm={handleConfirmRecurring}
+              isLoading={isSubmitting}
             />
         </>
     );

@@ -14,13 +14,14 @@ import { maskCPF } from '@/utils/masks';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAppointmentCreated: () => void;
+    onConfirm: (appointmentData: any) => void;
     slot: string;
     date: string;
     professionalId: string;
+    isSubmitting: boolean;
 }
 
-export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCreated, slot, date, professionalId }: ModalProps) {
+export default function NewAppointmentModal({ isOpen, onClose, onConfirm, slot, date, professionalId, isSubmitting }: ModalProps) {
     const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const [searchFilters, setSearchFilters] = useState({ name: '', cpf: '', birth_date: '' });
     const [suggestions, setSuggestions] = useState<Patient[]>([]);
@@ -30,7 +31,6 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
     
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observations, setObservations] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const [showConflictModal, setShowConflictModal] = useState(false);
     
     const { waitingListEntry } = useWaitingListCheck(selectedPatient?.patient_id, professionalId);
@@ -66,33 +66,21 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
         setSuggestions([]);
     };
 
-    const createNewAppointment = async (waitlistEntryId?: string) => {
-        setIsLoading(true);
-        const toastId = toast.loading("A agendar...");
-        try {
-            const appointment_datetime = `${date}T${slot}:00`;
-            if (waitlistEntryId) {
-                await api.patch(`/appointments/${waitlistEntryId}/schedule-from-waitlist`, { newDateTime: appointment_datetime });
-            } else {
-                await api.post('/appointments', {
-                    patient_id: selectedPatient!.patient_id,
-                    professional_id: professionalId,
-                    appointment_datetime,
-                    observations,
-                    vinculo,
-                });
-            }
-            toast.success("Agendamento criado com sucesso!", { id: toastId });
-            onAppointmentCreated();
-            onClose();
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Não foi possível agendar.", { id: toastId });
-        } finally {
-            setIsLoading(false);
-        }
+    const createNewAppointment = (waitlistEntryId?: string) => {
+        const appointment_datetime = `${date}T${slot}:00`;
+        
+        const appointmentData = {
+            patient_id: selectedPatient!.patient_id,
+            professional_id: professionalId,
+            appointment_datetime,
+            observations,
+            vinculo,
+            waitlistEntryId: waitlistEntryId || null,
+        };
+        onConfirm(appointmentData);
     };
 
-    const handleConfirmAppointment = async () => {
+    const handleConfirmAppointment = () => {
         if (!selectedPatient) {
             toast.error("Por favor, selecione um paciente.");
             return;
@@ -109,7 +97,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
             setShowConflictModal(true);
             return;
         }
-        await createNewAppointment();
+        createNewAppointment();
     };
     
     const resetSearch = () => {
@@ -124,6 +112,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
             setTimeout(() => {
                 resetSearch();
                 setObservations('');
+                setVinculo('nenhum');
                 setShowConflictModal(false);
             }, 300);
         }
@@ -137,11 +126,11 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                 <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl animate-fade-in-up">
                     <div className="flex items-center justify-between mb-4 pb-4 border-b">
                         <h2 className="text-xl font-bold text-gray-800">Agendar Horário - {slot}</h2>
-                        <button onClick={onClose} className="p-1 rounded-full text-gray-500 hover:bg-gray-200"><X size={20}/></button>
+                        <button onClick={onClose} disabled={isSubmitting} className="p-1 rounded-full text-gray-500 hover:bg-gray-200"><X size={20}/></button>
                     </div>
                     
                     <div className="space-y-4">
-                        {/* Formulário de Busca Avançada */}
+                        {/* AQUI ESTÁ O CÓDIGO DO FORMULÁRIO DE BUSCA QUE ESTAVA EM FALTA */}
                         {!selectedPatient && (
                             <div className="p-4 border rounded-lg bg-gray-50">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">1. Procurar Paciente</label>
@@ -179,8 +168,8 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
 
                         {selectedPatient && (
                             <div className="p-3 bg-green-50 rounded-md border border-green-200 animate-fade-in flex justify-between items-center">
-                                 <label className="block text-sm font-medium text-green-800">Paciente Selecionado: <span className="font-bold">{selectedPatient.name}</span></label>
-                                <button onClick={resetSearch} className="text-xs font-semibold text-blue-600 hover:underline">Procurar outro</button>
+                               <label className="block text-sm font-medium text-green-800">Paciente Selecionado: <span className="font-bold">{selectedPatient.name}</span></label>
+                               <button onClick={resetSearch} className="text-xs font-semibold text-blue-600 hover:underline">Procurar outro</button>
                             </div>
                         )}
                         <div>
@@ -202,10 +191,10 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                         </div>
                     </div>
                     <div className="flex justify-end gap-4 mt-6 pt-4 border-t">
-                        <button type="button" onClick={onClose} className="py-2 px-4 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 font-semibold">Cancelar</button>
-                        <button onClick={handleConfirmAppointment} disabled={!selectedPatient || isLoading}
+                        <button type="button" onClick={onClose} disabled={isSubmitting} className="py-2 px-4 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 font-semibold">Cancelar</button>
+                        <button onClick={handleConfirmAppointment} disabled={!selectedPatient || isSubmitting}
                             className="py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 font-semibold">
-                            {isLoading ? "A agendar..." : "Confirmar Agendamento"}
+                            {isSubmitting ? "A agendar..." : "Confirmar Agendamento"}
                         </button>
                     </div>
                 </div>
@@ -221,7 +210,6 @@ export default function NewAppointmentModal({ isOpen, onClose, onAppointmentCrea
                 }}
             />
 
-            {/* Modal de Conflito de Agendamento Futuro */}
             <FutureScheduleConflictModal
                 isOpen={showFutureScheduleConflictModal}
                 onClose={() => setShowFutureScheduleConflictModal(false)}

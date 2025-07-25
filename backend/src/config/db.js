@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 let pool;
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.DB_URL) {
     pool = new Pool({
         connectionString: process.env.DB_URL,
         ssl: {
@@ -27,4 +27,5 @@ if (process.env.NODE_ENV === 'production') {
 
 module.exports = {
     query: (text, params) => pool.query(text, params),
+    pool: pool
 };

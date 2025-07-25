@@ -142,7 +142,7 @@ exports.checkWaitingList = async (req, res, next) => {
 
 exports.scheduleFromWaitlist = async (req, res, next) => {
     try {
-        const updatedAppointment = await appointmentService.scheduleFromWaitlist(req.params.id, newDateTime);
+        const updatedAppointment = await appointmentService.scheduleFromWaitlist(req.params.id, req.body.newDateTime);
         res.status(200).json(updatedAppointment);
     } catch (error) {
         next(error);
@@ -201,4 +201,57 @@ exports.getDetailedReportAppointments = async (req, res, next) => {
             appointments: detailedAppointments
         }
     });
+};
+
+exports.createRecurringAppointments = async (req, res, next) => {
+    try {
+        const { appointmentData, durationInMonths } = req.body;
+
+        if (!appointmentData || !durationInMonths) {
+            return res.status(400).json({ message: "Dados do agendamento e duração são obrigatórios." });
+        }
+
+        const createdAppointments = await appointmentModel.createRecurring(appointmentData, durationInMonths);
+
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'CREATE_RECURRING_APPOINTMENTS',
+            target_entity: 'appointments',
+            target_id: createdAppointments[0]?.recurring_group_id,
+            details: {
+                count: createdAppointments.length,
+                patient_id: appointmentData.patient_id,
+                professional_id: appointmentData.professional_id,
+                durationInMonths
+            }
+        });
+
+        res.status(201).json(createdAppointments);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.deleteRecurringAppointments = async (req, res, next) => {
+    try {
+        const { groupId } = req.params;
+        const deletedCount = await appointmentModel.deleteByGroupId(groupId);
+
+        if (deletedCount === 0) {
+            return res.status(404).json({ message: "Nenhum agendamento encontrado para este grupo." });
+        }
+
+        // LOG DE AUDITORIA:
+        await auditLogModel.createLog({
+            user_id: req.user.user_id,
+            action: 'DELETE_RECURRING_APPOINTMENTS',
+            target_entity: 'appointments',
+            target_id: groupId,
+            details: { deletedCount }
+        });
+
+        res.status(200).json({ message: `${deletedCount} agendamentos da série foram removidos com sucesso.` });
+    } catch (error) {
+        next(error);
+    }
 };

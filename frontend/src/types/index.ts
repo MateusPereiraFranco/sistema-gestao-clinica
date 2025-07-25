@@ -1,5 +1,5 @@
 export type PatientVinculo = 'educação' | 'saude' | 'AMA' | 'nenhum';
-export type AppointmentStatus = | 'scheduled' | 'waiting' | 'in_progress' | 'completed' | 'justified_absence' | 'unjustified_absence' | 'canceled';
+export type AppointmentStatus = | 'scheduled' | 'waiting' | 'in_progress' | 'completed' | 'justified_absence' | 'unjustified_absence' | 'canceled' | 'on_waiting_list';
 
 export interface Unit {
     unit_id: string;
@@ -55,6 +55,7 @@ export interface Appointment {
     request_date?: string;
     created_by_name?: string;
     formatted_date?: string;
+    recurring_group_id?: string;
 }
 
 export interface User {

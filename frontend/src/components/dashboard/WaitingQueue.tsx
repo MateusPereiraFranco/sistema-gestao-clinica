@@ -4,7 +4,6 @@ import { Appointment, PatientVinculo } from "@/types";
 import { Stethoscope, Clock, UserCheck, Eye, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/useAuthStore";
-import toast from "react-hot-toast";
 
 interface WaitingQueueProps {
     queue: Appointment[];
@@ -40,14 +39,17 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
     }
     
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {queue.map(item => {
                 const vinculoStyle = getVinculoStyle(item.vinculo);
                 const canAttend = user?.user_id === item.professional_id;
                 return (
-                    <div key={item.appointment_id} className={`p-4 bg-white rounded-lg shadow-sm flex items-center justify-between border-l-4 ${vinculoStyle.borderColor}`}>
+                    // 1. O container do cartão foi alterado para empilhar em telemóveis e ficar em linha em ecrãs maiores.
+                    // - flex-col (padrão): empilha verticalmente.
+                    // - md:flex-row: muda para linha em ecrãs de tablet para cima.
+                    <div key={item.appointment_id} className={`p-4 bg-white rounded-lg shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-l-4 ${vinculoStyle.borderColor}`}>
                         <div className="flex items-center gap-4">
-                            <div className={`p-3 rounded-full ${vinculoStyle.bg}`}>
+                            <div className={`p-3 rounded-full ${vinculoStyle.bg} hidden sm:block`}>
                                 <UserCheck className={`w-6 h-6 ${vinculoStyle.textColor}`} />
                             </div>
                             <div>
@@ -58,7 +60,9 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        
+                        {/* 2. Os botões agora têm uma margem e alinhamento que se ajustam. */}
+                        <div className="flex items-center justify-end gap-2 pt-4 md:pt-0 border-t md:border-t-0">
                             {item.status === 'completed' ? (
                                 <div className="flex items-center gap-4">
                                     <span className="text-sm text-green-600 font-semibold">Atendido</span>
@@ -76,18 +80,19 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                     <button 
                                         onClick={() => onStartService(item.appointment_id)}
                                         disabled={!canAttend}
-                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed enabled:hover:bg-indigo-700"
+                                        // 3. O botão principal agora ocupa mais espaço em telemóveis para ser mais fácil de tocar.
+                                        className="flex-grow md:flex-grow-0 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed enabled:hover:bg-indigo-700"
                                     >
                                         <Stethoscope size={18} />
                                         {item.status === 'in_progress' ? 'Continuar' : 'Atender'}
                                     </button>
-                                    {user?.profile === 'master' && (
+                                    {(user?.profile === 'master' || user?.profile === 'admin') && (
                                     <button
                                         onClick={() => onCancel(item.appointment_id)}
-                                        className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-red-700 font-semibold p-2 rounded hover:bg-red-50"
+                                        className="p-2 text-gray-500 hover:text-red-700 rounded-md hover:bg-red-50"
                                         title="Cancelar Atendimento"
                                     >
-                                        <XCircle size={18} />Cancelar
+                                        <XCircle size={22} />
                                     </button>
                                     )}
                                 </>
