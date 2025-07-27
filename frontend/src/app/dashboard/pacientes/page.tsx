@@ -58,9 +58,10 @@ export default function PacientesPage() {
     
     const headerAction = (
         <Link href="/dashboard/pacientes/novo"
-            className="flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
+            className="flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-2 sm:px-4 rounded-lg shadow-sm hover:bg-indigo-700">
             <PlusCircle size={20} />
-            Adicionar Paciente
+            <span className="hidden sm:inline">Adicionar Paciente</span>
+            
         </Link>
     );
 

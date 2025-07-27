@@ -88,11 +88,11 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
         }
     };
 
+    // CORREÇÃO 1: A função de formatação de data foi simplificada para ser mais robusta.
     const formatDateForDisplay = (dateString: string) => {
         if (!dateString) return 'N/A';
         try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR');
+            return new Date(dateString).toLocaleDateString('pt-BR');
         } catch (error) {
             console.error("Erro ao formatar data:", dateString, error);
             return dateString;
@@ -146,8 +146,8 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex justify-between items-center mb-4">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                 <div>
                     <h3 className="text-lg font-semibold text-gray-800">Relatório de Atendimentos por Profissional</h3>
                     <p className="text-sm text-gray-500">Período: {period}</p>
@@ -155,7 +155,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                 <button 
                     onClick={handleExport}
                     disabled={isExporting}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-green-700 disabled:bg-green-400"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-green-700 disabled:bg-green-400 w-full sm:w-auto"
                 >
                     <Download size={16}/>
                     {isExporting ? 'A exportar...' : 'Exportar para CSV'}
@@ -168,19 +168,19 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                     return (
                         <React.Fragment key={item.user_id}>
                             <div className="border rounded-lg p-4">
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div>
                                         <p className="font-bold text-indigo-700">{item.professional_name}</p>
                                         <p className="text-sm text-gray-500">{item.specialty_name || 'N/A'}</p>
                                     </div>
-                                    <div className="text-right flex items-center gap-4">
-                                        <div>
+                                    <div className="w-full sm:w-auto flex justify-between items-center">
+                                        <div className="text-left sm:text-right">
                                             <p className="text-sm text-gray-500">Total de Atendimentos</p>
                                             <p className="font-bold text-xl text-gray-800">{item.total}</p>
                                         </div>
                                         <button
                                             onClick={() => toggleProfessionalExpansion(item.user_id)}
-                                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200 ml-4"
                                             disabled={isLoadingCurrentDetails}
                                             aria-label={isExpanded ? "Colapsar detalhes" : "Expandir detalhes"}
                                         >
@@ -203,38 +203,57 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                 </div>
                             </div>
                             {isExpanded && (
-                                <div className="overflow-x-auto bg-gray-50 p-4 rounded-lg mt-2 border border-gray-200">
+                                <div className="bg-gray-50 p-4 rounded-lg -mt-2 border border-gray-200">
                                     <h4 className="text-md font-semibold mb-3 text-gray-700">Detalhes dos Atendimentos de {item.professional_name}:</h4>
     
                                     {expandedProfessionalDetails[item.user_id]?.length > 0 ? (
-                                        <table className="min-w-full w-full text-sm text-left">
-                                            <thead className="bg-gray-100">
-                                                <tr>
-                                                    <th className="p-2 font-semibold text-gray-600">Data/Hora</th>
-                                                    <th className="p-2 font-semibold text-gray-600">Paciente</th>
-                                                    <th className="p-2 font-semibold text-gray-600">CPF</th>
-                                                    <th className="p-2 font-semibold text-gray-600">Vínculo</th>
-                                                    <th className="p-2 font-semibold text-gray-600">Status</th>
-                                                    <th className="p-2 font-semibold text-gray-600">Obs.</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                        <>
+                                            {/* Tabela para ecrãs médios e maiores (md:) */}
+                                            <div className="overflow-x-auto hidden md:block">
+                                                <table className="min-w-full w-full text-sm text-left">
+                                                    <thead className="bg-gray-100">
+                                                        <tr>
+                                                            <th className="p-2 font-semibold text-gray-600">Data/Hora</th>
+                                                            <th className="p-2 font-semibold text-gray-600">Paciente</th>
+                                                            <th className="p-2 font-semibold text-gray-600">CPF</th>
+                                                            <th className="p-2 font-semibold text-gray-600">Vínculo</th>
+                                                            <th className="p-2 font-semibold text-gray-600">Status</th>
+                                                            <th className="p-2 font-semibold text-gray-600">Obs.</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {expandedProfessionalDetails[item.user_id].map((detail) => (
+                                                            <tr key={detail.appointment_id} className="border-b border-gray-200 hover:bg-gray-100">
+                                                                <td className="p-2 text-gray-700 whitespace-nowrap">
+                                                                    {formatDateForDisplay(detail.appointment_datetime)} às {detail.time}
+                                                                </td>
+                                                                <td className="p-2 text-gray-700">{detail.patient_name}</td>
+                                                                <td className="p-2 text-gray-700">{detail.patient_cpf || 'N/A'}</td>
+                                                                <td className="p-2 text-gray-700">{detail.vinculo}</td>
+                                                                <td className="p-2 text-gray-700">{statusLabels[detail.status as AppointmentStatus] || detail.status}</td>
+                                                                <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations || 'N/A'}>
+                                                                    {detail.observations || 'N/A'}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {/* Cartões para telemóveis (md:hidden) */}
+                                            <div className="md:hidden space-y-3">
                                                 {expandedProfessionalDetails[item.user_id].map((detail) => (
-                                                    <tr key={detail.appointment_id} className="border-b border-gray-200 hover:bg-gray-100">
-                                                        <td className="p-2 text-gray-700 whitespace-nowrap">
-                                                            {formatDateForDisplay(detail.appointment_datetime)} às {detail.time}
-                                                        </td>
-                                                        <td className="p-2 text-gray-700">{detail.patient_name}</td>
-                                                        <td className="p-2 text-gray-700">{detail.patient_cpf || 'N/A'}</td>
-                                                        <td className="p-2 text-gray-700">{detail.vinculo}</td>
-                                                        <td className="p-2 text-gray-700">{statusLabels[detail.status as AppointmentStatus] || detail.status}</td>
-                                                        <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations || 'N/A'}>
-                                                            {detail.observations || 'N/A'}
-                                                        </td>
-                                                    </tr>
+                                                    <div key={detail.appointment_id} className="bg-white p-3 rounded-md shadow-sm border">
+                                                        <p><span className="font-semibold text-gray-500">Data/Hora:</span> {formatDateForDisplay(detail.appointment_datetime)} às {detail.time}</p>
+                                                        <p><span className="font-semibold text-gray-500">Paciente:</span> {detail.patient_name}</p>
+                                                        <p><span className="font-semibold text-gray-500">CPF:</span> {detail.patient_cpf || 'N/A'}</p>
+                                                        <p><span className="font-semibold text-gray-500">Vínculo:</span> {detail.vinculo}</p>
+                                                        <p><span className="font-semibold text-gray-500">Status:</span> {statusLabels[detail.status as AppointmentStatus] || detail.status}</p>
+                                                        {detail.observations && <p><span className="font-semibold text-gray-500">Obs.:</span> {detail.observations}</p>}
+                                                    </div>
                                                 ))}
-                                            </tbody>
-                                        </table>
+                                            </div>
+                                        </>
                                         ) : (
                                             <p className="text-gray-600 text-center py-4">Nenhum detalhe de atendimento encontrado para este profissional no período e com o filtro de status selecionado.</p>
                                         )}

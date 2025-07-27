@@ -12,8 +12,6 @@ interface ReportFiltersProps {
     isLoading: boolean;
 }
 
-
-
 export default function ReportFilters({ professionals, status, onSearch, isLoading }: ReportFiltersProps) {
     
     const {

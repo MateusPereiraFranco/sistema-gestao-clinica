@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 interface EvolutionFormProps {
     appointmentId: string;
     patientId: string;
+    onFinalize: (formData: any) => Promise<void>; // Prop para comunicar com a página pai
 }
 
 interface Conflict {
@@ -19,7 +20,7 @@ interface Conflict {
     message: string;
 }
 
-export default function EvolutionForm({ appointmentId, patientId }: EvolutionFormProps) {
+export default function EvolutionForm({ appointmentId, patientId, onFinalize }: EvolutionFormProps) {
     const router = useRouter();
     const { user: loggedInUser } = useAuthStore();
     const [professionals, setProfessionals] = useState<User[]>([]);
@@ -73,22 +74,22 @@ export default function EvolutionForm({ appointmentId, patientId }: EvolutionFor
     
     const submitForm = async () => {
         setIsLoading(true);
-        const toastId = toast.loading("A finalizar atendimento...");
-        try {
-            const validReferrals = selectedReferrals.filter(
-                refId => !referralConflicts.some(c => c.professionalId === refId)
-            );
+        
+        const validReferrals = selectedReferrals.filter(
+            refId => !referralConflicts.some(c => c.professionalId === refId)
+        );
 
-            await api.post(`/appointments/${appointmentId}/complete-service`, {
-                evolution: evolutionText,
-                referral_ids: validReferrals,
-                discharge_given: isDischarged,
-                follow_up_days: isDischarged ? null : (followUpDays ? parseInt(followUpDays) : null),
-            });
-            toast.success("Atendimento finalizado com sucesso!", { id: toastId });
-            router.push('/dashboard');
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Falha ao finalizar.", { id: toastId });
+        const formData = {
+            evolution: evolutionText,
+            referral_ids: validReferrals,
+            discharge_given: isDischarged,
+            follow_up_days: isDischarged ? null : (followUpDays ? parseInt(followUpDays) : null),
+        };
+
+        try {
+            await onFinalize(formData);
+        } catch (error) {
+            console.error("Erro ao finalizar (EvolutionForm):", error);
         } finally {
             setIsLoading(false);
         }
@@ -104,7 +105,7 @@ export default function EvolutionForm({ appointmentId, patientId }: EvolutionFor
 
     return (
         <>
-            <div className="p-6 bg-white rounded-lg shadow-md space-y-8">
+            <div className="p-4 sm:p-6 bg-white rounded-lg shadow-md space-y-8">
                 <div>
                     <label htmlFor="evolution" className="block text-lg font-semibold text-gray-800">Evolução do Paciente</label>
                     <textarea id="evolution" rows={10} value={evolutionText} onChange={e => setEvolutionText(e.target.value)}
@@ -138,9 +139,10 @@ export default function EvolutionForm({ appointmentId, patientId }: EvolutionFor
 
                 <div className="border-t pt-8">
                     <h3 className="text-lg font-semibold text-gray-800">Conduta Final</h3>
-                    <div className="flex flex-col sm:flex-row gap-8 mt-4">
+                    {/* A secção de conduta agora empilha em telemóveis e alinha-se em ecrãs maiores */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 mt-4">
                         <div className="flex items-center gap-4">
-                            <label className="font-medium">Retorno em:</label>
+                            <label className="font-medium shrink-0">Retorno em:</label>
                             <input type="number" value={followUpDays} onChange={e => setFollowUpDays(e.target.value)}
                                 disabled={isDischarged} placeholder="dias"
                                 className="w-24 p-2 border rounded-md disabled:bg-gray-200"/>
@@ -154,8 +156,8 @@ export default function EvolutionForm({ appointmentId, patientId }: EvolutionFor
 
                 <div className="flex justify-end pt-8 border-t">
                     <button type="button" onClick={handleSubmit} disabled={isLoading}
-                        className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 disabled:bg-green-300">
-                        Finalizar Atendimento
+                        className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 disabled:bg-green-300 w-full sm:w-auto">
+                        {isLoading ? 'A finalizar...' : 'Finalizar Atendimento'}
                     </button>
                 </div>
             </div>

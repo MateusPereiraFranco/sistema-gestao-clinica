@@ -60,7 +60,6 @@ export default function GerirUsuariosPage() {
     };
 
     const handleDeleteUser = async (userId: string) => {
-        // O uso de window.confirm não é ideal, mas mantendo por consistência
         if (window.confirm("Tem a certeza que deseja apagar este utilizador?")) {
             try {
                 await api.delete(`/users/${userId}`);
@@ -89,9 +88,9 @@ export default function GerirUsuariosPage() {
 
     const headerAction = (
         <Link href="/dashboard/usuarios/novo"
-            className="flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700">
+            className="flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-2 sm:px-4 rounded-lg shadow-sm hover:bg-indigo-700">
             <PlusCircle size={20} />
-            Adicionar Utilizador
+            <span className="hidden sm:inline">Adicionar Utilizador</span>
         </Link>
     );
 
@@ -101,9 +100,9 @@ export default function GerirUsuariosPage() {
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 <UserFilters 
                     specialties={specialties}
-                    onSearch={handleSearch} // Agora esta função existe
+                    onSearch={handleSearch}
                     isLoading={isLoading}
-                    onSpecialtyCreated={handleSpecialtyCreated} // E esta também
+                    onSpecialtyCreated={handleSpecialtyCreated}
                 />
                 <UserTable users={users} isLoading={isLoading} onDelete={handleDeleteUser} onToggleStatus={handleToggleStatus} />
             </main>
