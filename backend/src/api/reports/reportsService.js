@@ -1,4 +1,5 @@
 const reportsModel = require('./reportsModel');
+const unitModel = require('../units/unitsModel');
 
 exports.getGroupedSummaryReport = async (filters, user) => {
     if (!filters.startDate || !filters.endDate) {
@@ -25,10 +26,26 @@ exports.getGroupedSummaryReport = async (filters, user) => {
 
         const professional = professionalMap.get(item.user_id);
         if (item.vinculo && item.service_count > 0) {
-            professional.summary[item.vinculo] = item.service_count;
+            if (professional.summary.hasOwnProperty(item.vinculo)) {
+                professional.summary[item.vinculo] = item.service_count;
+            }
             professional.service_count += item.service_count;
         }
     }
 
-    return Array.from(professionalMap.values());
+    const reportData = Array.from(professionalMap.values());
+
+    let unitName = 'AMA';
+
+    if (user.unit_id) {
+        const unit = await unitModel.findById(user.unit_id);
+        if (unit) {
+            unitName = unit.name;
+        }
+    }
+
+    return {
+        data: reportData,
+        unitName: unitName
+    };
 };

@@ -26,7 +26,6 @@ export default function AtendimentoPage() {
                 try {
                     const response = await api.get(`/appointments/${appointmentId}/details-for-service`);
                     setDetails(response.data);
-                    // Inicializa a data editável com a data do agendamento
                     if (response.data.appointment_datetime) {
                         setEditableAppointmentDate(response.data.appointment_datetime);
                     }

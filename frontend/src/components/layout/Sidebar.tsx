@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { BriefcaseMedical, LayoutDashboard, Users, Calendar, ListChecks, BarChart3, UserPlus, ShieldCheck, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import api from '@/services/api';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,8 +29,26 @@ const adminNavItems = [
 ]
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const pathname = usePathname();
-  const { user } = useAuthStore();
+    const { user: loggedInUser } = useAuthStore();
+    const [unitName, setUnitName] = useState('AMA');
+    const pathname = usePathname();
+    const { user } = useAuthStore();
+
+    useEffect(() => {
+        if (loggedInUser?.unit_id) {
+            if (loggedInUser.unit_name) {
+                setUnitName(loggedInUser.unit_name);
+            } else {
+                api.get(`/units/${loggedInUser.unit_id}`)
+                    .then(res => {
+                        setUnitName(res.data.name);
+                    })
+                    .catch(err => {
+                        console.error("Falha ao buscar o nome da unidade:", err);
+                    });
+            }
+        }
+    }, [loggedInUser]);
 
   return (
     <>
@@ -47,7 +67,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="h-16 flex items-center justify-between border-b px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                     <BriefcaseMedical className="h-6 w-6 text-indigo-600" />
-                    <span>Clínica IOA</span>
+                    <span>{unitName}</span>
                 </Link>
                 {/* Botão para fechar, visível apenas em ecrãs pequenos */}
                 <button onClick={onClose} className="lg:hidden p-1 text-gray-500">

@@ -5,12 +5,11 @@ import ReportFilters from "@/components/reports/ReportFilters";
 import GroupedReportTable from "@/components/reports/GroupedReportTable";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useFilterStore } from "@/stores/useFilterStore";
-import { User, PatientVinculo, AppointmentStatus } from "@/types"; // Importe AppointmentStatus
+import { User, PatientVinculo, AppointmentStatus } from "@/types";
 import api from "@/services/api";
 import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 
-// ... (suas interfaces ReportSummary e TransformedReportData permanecem as mesmas)
 interface ReportSummary {
     user_id: string;
     professional_name: string;
@@ -42,7 +41,7 @@ interface TransformedReportData {
 
 export default function RelatoriosPage() {
     const { user, token } = useAuthStore();
-    // 1. Obtenha o 'reportStatus' da sua store
+    const [unitNameForReport, setUnitNameForReport] = useState('AMA');
     const { 
         reportProfessional, 
         reportStartDate, 
@@ -90,8 +89,11 @@ export default function RelatoriosPage() {
                 params,
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setRawReportData(response.data);
-            if(response.data.length === 0) {
+            
+            setRawReportData(response.data.data);
+            setUnitNameForReport(response.data.unitName);
+
+            if(response.data.data.length === 0) {
                 toast.success("Nenhum atendimento encontrado para este período.");
             }
         } catch (error) {
@@ -103,10 +105,8 @@ export default function RelatoriosPage() {
         }
     };
 
-    // A função de transformação não precisa mudar, ela vai funcionar corretamente
     const transformedReportData = useMemo(() => {
-        // ... seu código de transformação aqui ...
-        // (sem alterações necessárias)
+        // A lógica de transformação permanece a mesma, pois o backend ainda envia a chave 'AMA'
         const transformed: TransformedReportData[] = rawReportData.map(item => {
             const countSaude = Number(item.summary.saude) || 0;
             const countEducacao = Number(item.summary['educação']) || 0; 
@@ -120,7 +120,7 @@ export default function RelatoriosPage() {
                 summary: {
                     saude: countSaude,
                     educacao: countEducacao,
-                    AMA: countAMA,
+                    AMA: countAMA, // Mantemos a chave 'AMA' aqui
                     nenhum: countNenhum,
                 },
                 total: totalForProfessional,
@@ -130,8 +130,6 @@ export default function RelatoriosPage() {
     }, [rawReportData]);
 
     const formatDate = (dateString: string) => {
-        // ... seu código de formatação aqui ...
-        // (sem alterações necessárias)
         if (!dateString) return '';
         try {
             const date = new Date(dateString + 'T12:00:00Z');
@@ -146,7 +144,6 @@ export default function RelatoriosPage() {
         <>
             <Header title="Relatórios e Análises" />
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* 3. Passe a lista de status para o componente ReportFilters */}
                 <ReportFilters 
                     professionals={professionals} 
                     status={availableStatuses}
@@ -158,6 +155,7 @@ export default function RelatoriosPage() {
                     <GroupedReportTable 
                         data={transformedReportData}
                         period={`${formatDate(reportStartDate)} a ${formatDate(reportEndDate)}`}
+                        unitName={unitNameForReport}
                         filters={{
                             startDate: reportStartDate,
                             endDate: reportEndDate,

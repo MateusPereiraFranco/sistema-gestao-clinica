@@ -8,6 +8,7 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 interface LaunchServiceModalProps {
     patient: Patient | null;
@@ -16,13 +17,15 @@ interface LaunchServiceModalProps {
 }
 
 export default function LaunchServiceModal({ patient, onClose, onServiceLaunched }: LaunchServiceModalProps) {
+    const { user: loggedInUser } = useAuthStore();
     const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const router = useRouter();
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showConflictModal, setShowConflictModal] = useState(false);
-    
+    const [unitName, setUnitName] = useState('AMA');
+
     const { waitingListEntry } = useWaitingListCheck(patient?.patient_id, selectedProfessional);
 
     useEffect(() => {
@@ -32,6 +35,19 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
                 setProfessionals(professionalList);
                 if (professionalList.length > 0) setSelectedProfessional(professionalList[0].user_id);
             });
+        }
+        if (loggedInUser?.unit_id) {
+            if (loggedInUser.unit_name) {
+                setUnitName(loggedInUser.unit_name);
+            } else {
+                api.get(`/units/${loggedInUser.unit_id}`)
+                    .then(res => {
+                        setUnitName(res.data.name);
+                    })
+                    .catch(err => {
+                        console.error("Falha ao buscar o nome da unidade:", err);
+                    });
+            }
         }
     }, [patient]);
 
@@ -109,7 +125,7 @@ export default function LaunchServiceModal({ patient, onClose, onServiceLaunched
                             <option value="nenhum">Nenhum</option>
                             <option value="saude">Saúde</option>
                             <option value="educação">Educação</option>
-                            <option value="AMA">AMA</option>
+                            <option value="AMA">{unitName}</option>
                         </select>
                     </div>
                     </div>

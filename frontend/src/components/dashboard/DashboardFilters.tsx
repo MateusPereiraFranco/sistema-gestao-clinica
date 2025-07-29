@@ -18,13 +18,7 @@ export default function DashboardFilters({ professionals }: DashboardFiltersProp
     };
 
     return (
-        // 1. O container principal foi alterado para um grid responsivo.
-        // - Em telemóveis (padrão): 1 coluna (grid-cols-1)
-        // - Em tablets (sm:): 2 colunas (sm:grid-cols-2)
-        // - Em portáteis (lg:): 4 colunas (lg:grid-cols-4)
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-end gap-4 p-4 bg-white rounded-lg shadow-sm mb-6">
-            
-            {/* 2. Cada filtro agora tem uma label por cima do campo. */}
             <div>
                 <label htmlFor="professional_dashboard_filter" className="block text-sm font-medium text-gray-700">Profissional</label>
                 <select

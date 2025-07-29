@@ -44,9 +44,6 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                 const vinculoStyle = getVinculoStyle(item.vinculo);
                 const canAttend = user?.user_id === item.professional_id;
                 return (
-                    // 1. O container do cartão foi alterado para empilhar em telemóveis e ficar em linha em ecrãs maiores.
-                    // - flex-col (padrão): empilha verticalmente.
-                    // - md:flex-row: muda para linha em ecrãs de tablet para cima.
                     <div key={item.appointment_id} className={`p-4 bg-white rounded-lg shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-l-4 ${vinculoStyle.borderColor}`}>
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-full ${vinculoStyle.bg} hidden sm:block`}>
@@ -61,7 +58,6 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                             </div>
                         </div>
                         
-                        {/* 2. Os botões agora têm uma margem e alinhamento que se ajustam. */}
                         <div className="flex items-center justify-end gap-2 pt-4 md:pt-0 border-t md:border-t-0">
                             {item.status === 'completed' ? (
                                 <div className="flex items-center gap-4">
@@ -80,7 +76,6 @@ export default function WaitingQueue({ queue, isLoading, showProfessionalName = 
                                     <button 
                                         onClick={() => onStartService(item.appointment_id)}
                                         disabled={!canAttend}
-                                        // 3. O botão principal agora ocupa mais espaço em telemóveis para ser mais fácil de tocar.
                                         className="flex-grow md:flex-grow-0 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed enabled:hover:bg-indigo-700"
                                     >
                                         <Stethoscope size={18} />

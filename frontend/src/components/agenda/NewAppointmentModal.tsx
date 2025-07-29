@@ -10,6 +10,7 @@ import { Patient, PatientVinculo } from '@/types';
 import { Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { maskCPF } from '@/utils/masks';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 interface ModalProps {
     isOpen: boolean;
@@ -22,12 +23,14 @@ interface ModalProps {
 }
 
 export default function NewAppointmentModal({ isOpen, onClose, onConfirm, slot, date, professionalId, isSubmitting }: ModalProps) {
+    const { user: loggedInUser } = useAuthStore();
     const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const [searchFilters, setSearchFilters] = useState({ name: '', cpf: '', birth_date: '' });
     const [suggestions, setSuggestions] = useState<Patient[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [showFutureScheduleConflictModal, setShowFutureScheduleConflictModal] = useState(false);
+    const [unitName, setUnitName] = useState('AMA');
     
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observations, setObservations] = useState('');
@@ -116,6 +119,19 @@ export default function NewAppointmentModal({ isOpen, onClose, onConfirm, slot, 
                 setShowConflictModal(false);
             }, 300);
         }
+        if (loggedInUser?.unit_id) {
+            if (loggedInUser.unit_name) {
+                setUnitName(loggedInUser.unit_name);
+            } else {
+                api.get(`/units/${loggedInUser.unit_id}`)
+                    .then(res => {
+                        setUnitName(res.data.name);
+                    })
+                    .catch(err => {
+                        console.error("Falha ao buscar o nome da unidade:", err);
+                    });
+            }
+        }
     }, [isOpen]);
 
     if (!isOpen) return null;
@@ -179,7 +195,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onConfirm, slot, 
                                 <option value="nenhum">Nenhum</option>
                                 <option value="saude">Saúde</option>
                                 <option value="educação">Educação</option>
-                                <option value="AMA">AMA</option>
+                                <option value="AMA">{unitName}</option>
                             </select>
                         </div>
                         <div>

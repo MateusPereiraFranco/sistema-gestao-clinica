@@ -1,6 +1,6 @@
 'use client';
 
-import { Appointment } from "@/types";
+import { Appointment, PatientVinculo } from "@/types";
 import { Stethoscope } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import toast from "react-hot-toast";
@@ -11,6 +11,15 @@ interface WaitingListTableProps {
     list: Appointment[];
     isLoading: boolean;
     refreshList: () => void;
+}
+
+const getVinculoStyle = (vinculo: PatientVinculo | null) => {
+    switch (vinculo) {
+        case 'saude': return { bg: 'bg-pink-50', textColor: 'text-pink-800', borderColor: 'border-pink-500' };
+        case 'educação': return { bg: 'bg-green-50', textColor: 'text-green-800', borderColor: 'border-green-500' };
+        case 'AMA': return { bg: 'bg-blue-50', textColor: 'text-blue-800', borderColor: 'border-blue-500' };
+        default: return { bg: 'bg-indigo-50', textColor: 'text-indigo-800', borderColor: 'border-indigo-500' };
+    }
 }
 
 export default function WaitingListTable({ list, isLoading, refreshList }: WaitingListTableProps) {
@@ -47,11 +56,12 @@ export default function WaitingListTable({ list, isLoading, refreshList }: Waiti
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {list.map(item => {
+                        const vinculoStyle = getVinculoStyle(item.vinculo);
                         const canAttend = user?.user_id === item.professional_id;
                         return (
-                            <tr key={item.appointment_id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4">
-                                    <p className="font-medium text-gray-900">{item.patient_name}</p>
+                            <tr key={item.appointment_id} className={`hover:bg-gray-50 ${vinculoStyle.bg}`}>
+                                <td className={`px-6 py-4`}>
+                                    <p className={`font-medium ${vinculoStyle.textColor}`}>{item.patient_name}</p>
                                     <p className="text-sm text-gray-500 mt-1">CPF: {item.patient_cpf || 'N/A'}</p>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-700">{item.professional_name}</td>

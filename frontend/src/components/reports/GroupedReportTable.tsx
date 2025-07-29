@@ -32,9 +32,10 @@ interface ReportTableProps {
         status: string;
     };
     token: string | null;
+    unitName: string;
 }
 
-export default function GroupedReportTable({ data, period, filters, token }: ReportTableProps) {
+export default function GroupedReportTable({ data, period, filters, token, unitName }: ReportTableProps) {
     const [expandedProfessionalDetails, setExpandedProfessionalDetails] = useState<Record<string, Appointment[]>>({});
     const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
     const [isExporting, setIsExporting] = useState(false);
@@ -72,11 +73,13 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
             });
 
             toast.dismiss();
+            console.log(unitName, 'unitName for export');
             
             exportGroupedWithDetailsToCSV(
                 data,
                 allDetails,
-                `relatorio_completo_${period.replace(/\//g, '-')}`
+                `relatorio_completo_${period.replace(/\//g, '-')}`,
+                unitName
             );
 
         } catch (error) {
@@ -88,11 +91,11 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
         }
     };
 
-    // CORREÇÃO 1: A função de formatação de data foi simplificada para ser mais robusta.
     const formatDateForDisplay = (dateString: string) => {
         if (!dateString) return 'N/A';
         try {
-            return new Date(dateString).toLocaleDateString('pt-BR');
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
         } catch (error) {
             console.error("Erro ao formatar data:", dateString, error);
             return dateString;
@@ -198,7 +201,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
                                     <div className="text-center"><p className="text-xs text-gray-500">Saúde</p><p className="font-semibold">{item.summary.saude}</p></div>
                                     <div className="text-center"><p className="text-xs text-gray-500">Educação</p><p className="font-semibold">{item.summary.educacao}</p></div>
-                                    <div className="text-center"><p className="text-xs text-gray-500">AMA</p><p className="font-semibold">{item.summary.AMA}</p></div>
+                                    <div className="text-center"><p className="text-xs text-gray-500">{unitName}</p><p className="font-semibold">{item.summary.AMA}</p></div>
                                     <div className="text-center"><p className="text-xs text-gray-500">Nenhum</p><p className="font-semibold">{item.summary.nenhum}</p></div>
                                 </div>
                             </div>
@@ -229,7 +232,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                                                 </td>
                                                                 <td className="p-2 text-gray-700">{detail.patient_name}</td>
                                                                 <td className="p-2 text-gray-700">{detail.patient_cpf || 'N/A'}</td>
-                                                                <td className="p-2 text-gray-700">{detail.vinculo}</td>
+                                                                <td className="p-2 text-gray-700 capitalize">{detail.vinculo === 'AMA' ? unitName : detail.vinculo}</td>
                                                                 <td className="p-2 text-gray-700">{statusLabels[detail.status as AppointmentStatus] || detail.status}</td>
                                                                 <td className="p-2 text-gray-700 max-w-xs truncate" title={detail.observations || 'N/A'}>
                                                                     {detail.observations || 'N/A'}
@@ -247,7 +250,7 @@ export default function GroupedReportTable({ data, period, filters, token }: Rep
                                                         <p><span className="font-semibold text-gray-500">Data/Hora:</span> {formatDateForDisplay(detail.appointment_datetime)} às {detail.time}</p>
                                                         <p><span className="font-semibold text-gray-500">Paciente:</span> {detail.patient_name}</p>
                                                         <p><span className="font-semibold text-gray-500">CPF:</span> {detail.patient_cpf || 'N/A'}</p>
-                                                        <p><span className="font-semibold text-gray-500">Vínculo:</span> {detail.vinculo}</p>
+                                                        <p className="capitalize"><span className="font-semibold text-gray-500">Vínculo:</span> {detail.vinculo === 'AMA' ? unitName : detail.vinculo}</p>
                                                         <p><span className="font-semibold text-gray-500">Status:</span> {statusLabels[detail.status as AppointmentStatus] || detail.status}</p>
                                                         {detail.observations && <p><span className="font-semibold text-gray-500">Obs.:</span> {detail.observations}</p>}
                                                     </div>

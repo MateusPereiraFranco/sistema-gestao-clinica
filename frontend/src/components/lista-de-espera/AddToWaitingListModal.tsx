@@ -5,6 +5,7 @@ import { Patient, User, Appointment, PatientVinculo } from '@/types';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 interface AddToWaitingListModalProps {
     patient: Patient | null;
@@ -13,12 +14,14 @@ interface AddToWaitingListModalProps {
 }
 
 export default function AddToWaitingListModal({ patient, onClose, onPatientAdded }: AddToWaitingListModalProps) {
+    const { user: loggedInUser } = useAuthStore();
     const [vinculo, setVinculo] = useState<PatientVinculo>('nenhum');
     const [professionals, setProfessionals] = useState<User[]>([]);
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [requestDate, setRequestDate] = useState(new Date().toISOString().split('T')[0]);
     const [requestObservations, setRequestObservations] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [unitName, setUnitName] = useState('AMA');
 
     useEffect(() => {
         if (patient) {
@@ -27,6 +30,19 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                 setProfessionals(profList);
                 if (profList.length > 0) setSelectedProfessional(profList[0].user_id);
             });
+        }
+        if (loggedInUser?.unit_id) {
+            if (loggedInUser.unit_name) {
+                setUnitName(loggedInUser.unit_name);
+            } else {
+                api.get(`/units/${loggedInUser.unit_id}`)
+                    .then(res => {
+                        setUnitName(res.data.name);
+                    })
+                    .catch(err => {
+                        console.error("Falha ao buscar o nome da unidade:", err);
+                    });
+            }
         }
     }, [patient]);
 
@@ -104,7 +120,7 @@ export default function AddToWaitingListModal({ patient, onClose, onPatientAdded
                             <option value="nenhum">Nenhum</option>
                             <option value="saude">Saúde</option>
                             <option value="educação">Educação</option>
-                            <option value="AMA">AMA</option>
+                            <option value="AMA">{unitName}</option>
                         </select>
                         </div>
                     <div>

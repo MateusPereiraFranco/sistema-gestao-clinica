@@ -38,6 +38,7 @@ export default function ProntuarioPage() {
     const { dashboardProfessional, setDashboardProfessional} = useFilterStore();
     const params = useParams();
     const patientId = params.patientId as string;
+    const [unitName, setUnitName] = useState('AMA');
 
     const [patientName, setPatientName] = useState('');
     const [history, setHistory] = useState<HistoryData['history']>([]);
@@ -68,6 +69,19 @@ export default function ProntuarioPage() {
 
     useEffect(() => {
         fetchHistory();
+        if (user?.unit_id) {
+            if (user.unit_name) {
+                setUnitName(user.unit_name);
+            } else {
+                api.get(`/units/${user.unit_id}`)
+                    .then(res => {
+                        setUnitName(res.data.name);
+                    })
+                    .catch(err => {
+                        console.error("Falha ao buscar o nome da unidade:", err);
+                    });
+            }
+        }
     }, [fetchHistory]);
 
     useEffect(() => {
@@ -147,7 +161,7 @@ export default function ProntuarioPage() {
                                             <td className="px-4 py-4 whitespace-nowrap text-sm">{item.date} às {item.time}</td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm">{item.professional_name}</td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm">{item.service_type}</td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm capitalize">{item.vinculo}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm capitalize">{item.vinculo !== 'AMA' ? item.vinculo : unitName}</td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm"><StatusBadge status={item.status} /></td>
                                             <td className="px-4 py-4 text-sm max-w-sm truncate" title={item.observations? item.observations : ''}>{item.observations || 'N/A'}</td>
                                             <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
