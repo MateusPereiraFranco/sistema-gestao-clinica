@@ -13,14 +13,16 @@ exports.getAppointmentsByProfessionalAndDate = async (professionalId, date) => {
 
 exports.getAppointments = async (filters, user) => {
     if (user.profile !== 'admin') {
-        if (!filters.professionalId) {
+        if (!filters.professionalId || filters.professionalId === 'all') {
             filters.professionalId = 'all';
             filters.unit_id = user.unit_id;
             return appointmentModel.findAppointments(filters);
         }
+
         const professional = await userModel.findById(filters.professionalId);
-        if (professional.unit_id !== user.unit_id) {
-            throw new Error("Não autorizado a ver a agenda deste profissional.");
+
+        if (!professional || professional.unit_id !== user.unit_id) {
+            return [];
         }
     }
     return appointmentModel.findAppointments(filters);

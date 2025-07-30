@@ -88,8 +88,8 @@ exports.deletePatient = async (req, res, next) => {
 
 exports.getPatientHistory = async (req, res, next) => {
     try {
-        const { startDate, endDate, professional_id } = req.query;
-        const historyData = await patientService.getPatientHistory(req.params.id, { startDate, endDate, professional_id });
+        const { startDate, endDate, professional_id, withScheduled } = req.query;
+        const historyData = await patientService.getPatientHistory(req.params.id, { startDate, endDate, professional_id, withScheduled });
         res.status(200).json(historyData);
     } catch (error) {
         next(error);

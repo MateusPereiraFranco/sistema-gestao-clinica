@@ -152,7 +152,7 @@ exports.remove = async (id) => {
     return rowCount;
 };
 
-exports.findHistoryByPatientId = async (patientId, startDate, endDate, professional_id) => {
+exports.findHistoryByPatientId = async (patientId, startDate, endDate, professional_id, withScheduled) => {
     let query = `
         SELECT
             apt.appointment_id,
@@ -177,6 +177,9 @@ exports.findHistoryByPatientId = async (patientId, startDate, endDate, professio
     if (professional_id !== 'all') {
         query += ` AND apt.professional_id = $${paramIndex++}`;
         params.push(professional_id);
+    }
+    if (withScheduled === 'false') {
+        query += ` AND apt.status != 'scheduled'`;
     }
 
     query += ' ORDER BY apt.appointment_datetime DESC;';

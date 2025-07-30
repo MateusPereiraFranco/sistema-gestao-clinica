@@ -49,7 +49,7 @@ export default function AtendimentoPage() {
         try {
             await api.post(`/appointments/${appointmentId}/complete-service`, dataToSubmit);
             toast.success("Atendimento finalizado com sucesso!", { id: toastId });
-            router.push('/dashboard'); // Redireciona para o dashboard
+            router.push('/dashboard');
         } catch (error) {
             toast.error("Falha ao finalizar o atendimento.", { id: toastId });
             throw error;
@@ -66,8 +66,6 @@ export default function AtendimentoPage() {
                 {details && (
                     <PatientHeader 
                         details={details} 
-                        appointmentDate={editableAppointmentDate}
-                        onAppointmentDateChange={setEditableAppointmentDate}
                     />
                 )}
                 {details && (

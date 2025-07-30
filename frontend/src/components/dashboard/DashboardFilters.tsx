@@ -25,7 +25,6 @@ export default function DashboardFilters({ professionals }: DashboardFiltersProp
                     id="professional_dashboard_filter"
                     value={dashboardProfessional}
                     onChange={(e) => setDashboardProfessional(e.target.value)}
-                    // A classe w-full garante que o campo ocupe todo o espaço da sua coluna no grid.
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
                     <option value="all">Todos os Profissionais</option>
@@ -57,13 +56,11 @@ export default function DashboardFilters({ professionals }: DashboardFiltersProp
                         type="date"
                         value={dashboardDate}
                         onChange={(e) => setDashboardDate(e.target.value)}
-                        // A classe w-full faz o input crescer para preencher o espaço.
                         className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
                     <button onClick={() => handleDateChange(1)} className="p-2 rounded-md hover:bg-gray-200"><ChevronRight size={20} /></button>
                 </div>
             </div>
-
             {/* 3. O checkbox é alinhado com os outros campos. */}
             <div className="flex items-center pb-1">
                 <input type="checkbox" id="include_inactive_dashboard" checked={includeInactive}

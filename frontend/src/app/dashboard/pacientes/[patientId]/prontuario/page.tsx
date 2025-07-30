@@ -39,6 +39,7 @@ export default function ProntuarioPage() {
     const params = useParams();
     const patientId = params.patientId as string;
     const [unitName, setUnitName] = useState('AMA');
+    const [withScheduledCheck, setWithScheduledCheck] = useState(false);
 
     const [patientName, setPatientName] = useState('');
     const [history, setHistory] = useState<HistoryData['history']>([]);
@@ -54,8 +55,9 @@ export default function ProntuarioPage() {
         setIsLoading(true);
         setError(null);
         try {
+            console.log(withScheduledCheck);
             const response = await api.get(`/patients/${patientId}/history`, {
-                params: { startDate, endDate, professional_id: dashboardProfessional }
+                params: { startDate, endDate, professional_id: dashboardProfessional, withScheduled: withScheduledCheck }
             });
             setPatientName(response.data.name);
             setHistory(response.data.history);
@@ -65,7 +67,7 @@ export default function ProntuarioPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [patientId, startDate, endDate, dashboardProfessional]);
+    }, [patientId, startDate, endDate, dashboardProfessional, withScheduledCheck]);
 
     useEffect(() => {
         fetchHistory();
@@ -82,7 +84,7 @@ export default function ProntuarioPage() {
                     });
             }
         }
-    }, [fetchHistory]);
+    }, [fetchHistory, setWithScheduledCheck]);
 
     useEffect(() => {
         const fetchProfessionals = async () => {
@@ -105,7 +107,7 @@ export default function ProntuarioPage() {
             <Header title={`Prontuário de ${patientName || 'Paciente'}`} />
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="p-4 bg-white rounded-lg shadow-sm mb-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 items-end">
                         <div className="lg:col-span-1">
                             <label htmlFor="start_date_history" className="block text-sm font-medium text-gray-700">De</label>
                             <input type="date" id="start_date_history" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md"/>
@@ -127,6 +129,12 @@ export default function ProntuarioPage() {
                                     <option key={pro.user_id} value={pro.user_id}>{pro.name}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div className="flex items-center pb-1">
+                            <input type="checkbox" id="with_scheduled_dashboard" checked={withScheduledCheck}
+                                onChange={(e) => setWithScheduledCheck(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"/>
+                            <label htmlFor="with_scheduled_dashboard" className="ml-2 text-sm text-gray-700">Incluir Agendamentos</label>
                         </div>
                         <button onClick={fetchHistory} disabled={isLoading} className="flex items-center justify-center w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm font-medium hover:bg-indigo-700 disabled:bg-indigo-400">
                             <Search className="w-5 h-5 mr-2"/>
@@ -177,7 +185,6 @@ export default function ProntuarioPage() {
                                 </tbody>
                             </table>
                         </div>
-
                         {/* Cartões para telemóveis (md:hidden) */}
                         <div className="md:hidden">
                             {history.map(item => (
