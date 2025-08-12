@@ -35,8 +35,8 @@ export default function PacientesPage() {
                 limit: ITEMS_PER_PAGE.toString(),
             };
             const response = await api.get('/patients', { params });
-            setPatients(response.data.patients);
-            setTotalPatients(response.data.total);
+            setPatients(response.data?.patients || []);
+            setTotalPatients(response.data?.total || 0);
         } catch (error) {
             console.error("Erro ao buscar pacientes:", error);
             toast.error("Falha ao buscar pacientes.");
