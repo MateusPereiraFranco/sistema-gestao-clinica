@@ -1,8 +1,8 @@
-const { Resend } = require('resend');
+//const { Resend } = require('resend');
 
-///////////////////////////////// /////////////////////////////////////////////////instalar o resend no projeto principal
+// instalar o resend no projeto principal *** colocar no .env a chave da api do resend *************************************************
 
-// O Resend automaticamente usa a variável de ambiente RESEND_API_KEY
+/*
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
@@ -13,6 +13,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * @param {string} options.message - O corpo do email em texto plano.
  * @param {string} [options.html] - O corpo do email em HTML (opcional).
  */
+/*
 const sendEmail = async (options) => {
     try {
         console.log(`Enviando email para ${options.email}...`);
@@ -30,3 +31,4 @@ const sendEmail = async (options) => {
 };
 
 module.exports = sendEmail;
+*/
