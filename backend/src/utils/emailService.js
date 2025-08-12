@@ -1,9 +1,12 @@
-const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
+const { Resend } = require('resend');
 
-const sesClient = new SESClient({ region: process.env.AWS_REGION });
+///////////////////////////////// /////////////////////////////////////////////////instalar o resend no projeto principal
+
+// O Resend automaticamente usa a variável de ambiente RESEND_API_KEY
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Envia um email usando o Amazon SES.
+ * Envia um email usando o Resend.
  * @param {object} options - As opções do email.
  * @param {string} options.email - O email do destinatário.
  * @param {string} options.subject - O assunto do email.
@@ -11,30 +14,17 @@ const sesClient = new SESClient({ region: process.env.AWS_REGION });
  * @param {string} [options.html] - O corpo do email em HTML (opcional).
  */
 const sendEmail = async (options) => {
-    const params = {
-        Source: `Sistema Clínica IOA <${process.env.EMAIL_FROM}>`,
-        Destination: {
-            ToAddresses: [options.email],
-        },
-        Message: {
-            Subject: {
-                Data: options.subject,
-                Charset: 'UTF-8',
-            },
-            Body: {
-                ...(options.html
-                    ? { Html: { Data: options.html, Charset: 'UTF-8' } }
-                    : { Text: { Data: options.message, Charset: 'UTF-8' } }
-                )
-            },
-        },
-    };
-
     try {
-        const command = new SendEmailCommand(params);
-        await sesClient.send(command);
+        console.log(`Enviando email para ${options.email}...`);
+        await resend.emails.send({
+            from: `Sistema Clínicas - Mesopnet <${process.env.EMAIL_FROM}>`,
+            to: options.email,
+            subject: options.subject,
+            html: options.html || `<p>${options.message}</p>`,
+        });
+        console.log(`Email enviado com sucesso para ${options.email} via Resend.`);
     } catch (error) {
-        console.error("Falha ao enviar email via SES:", error);
+        console.error("Falha ao enviar email via Resend:", error);
         throw new Error("Não foi possível enviar o email.");
     }
 };

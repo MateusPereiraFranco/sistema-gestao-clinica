@@ -47,7 +47,7 @@ export default function PatientFilters({ onSearch, setIsLoading }: PatientFilter
             if (debouncedName.length > 2) {
                 try {
                     const response = await api.get('/patients', { params: { name: debouncedName } });
-                    setLiveSuggestions(response.data);
+                    setLiveSuggestions(response.data.patients);
                 } catch (error) {
                     console.error("Erro na busca ao vivo:", error);
                     setLiveSuggestions([]);

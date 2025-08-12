@@ -2,15 +2,19 @@ const db = require('../../config/db');
 const { hashPassword } = require('../../utils/passwordUtil');
 
 exports.findWithFilters = async (filters) => {
+    // 1. Prepara a base da consulta e os parâmetros
     let baseQuery = `
-        SELECT patient_id, name, cpf, mother_name, to_char(birth_date, 'DD/MM/YYYY') as birth_date_formatted,unit_id,
-               cell_phone_1, cell_phone_2, cns, cep, street, "number", neighborhood, city, state, unit_id
+        SELECT patient_id, name, cpf, mother_name, to_char(birth_date, 'DD/MM/YYYY') as birth_date_formatted,
+               unit_id, cell_phone_1, cell_phone_2, cns, cep, street, "number", neighborhood, city, state
         FROM patients
     `;
+    let countQuery = `SELECT COUNT(*) FROM patients`; // Query para contar o total de resultados
+
     const conditions = [];
     const params = [];
     let paramIndex = 1;
 
+    // 2. Constrói as condições de filtro (a sua lógica aqui está perfeita)
     if (filters.name) {
         conditions.push(`unaccent(name) ILIKE unaccent($${paramIndex++})`);
         params.push(`%${filters.name}%`);
@@ -19,10 +23,7 @@ exports.findWithFilters = async (filters) => {
         conditions.push(`unaccent(mother_name) ILIKE unaccent($${paramIndex++})`);
         params.push(`%${filters.mother_name}%`);
     }
-    if (filters.father_name) {
-        conditions.push(`unaccent(father_name) ILIKE unaccent($${paramIndex++})`);
-        params.push(`%${filters.father_name}%`);
-    }
+    // ... (adicione aqui os seus outros filtros: father_name, cpf, cns, etc.)
     if (filters.cpf) {
         conditions.push(`cpf = $${paramIndex++}`);
         params.push(filters.cpf);
@@ -40,12 +41,37 @@ exports.findWithFilters = async (filters) => {
         params.push(filters.unitId);
     }
 
-    if (conditions.length === 0) return [];
 
-    baseQuery += ` WHERE ${conditions.join(' AND ')}`;
-    baseQuery += ' ORDER BY name LIMIT 10;';
+    // 3. Adiciona a cláusula WHERE se houver filtros
+    if (conditions.length > 0) {
+        const whereClause = ` WHERE ${conditions.join(' AND ')}`;
+        baseQuery += whereClause;
+        countQuery += whereClause;
+    }
+
+    // 4. Executa a consulta para obter o número total de pacientes que correspondem aos filtros
+    const totalResult = await db.query(countQuery, params);
+    const total = parseInt(totalResult.rows[0].count, 10);
+
+    // 5. Adiciona a ordenação e a paginação à consulta principal
+    baseQuery += ' ORDER BY name ASC';
+
+    // Define o limite e a página, com valores padrão
+    const limit = parseInt(filters.limit, 10) || 10;
+    const page = parseInt(filters.page, 10) || 1;
+    const offset = (page - 1) * limit;
+
+    baseQuery += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    params.push(limit, offset);
+
+    // 6. Executa a consulta principal para obter os pacientes da página atual
     const { rows } = await db.query(baseQuery, params);
-    return rows;
+
+    // 7. Retorna um objeto com os pacientes e o número total de resultados
+    return {
+        patients: rows,
+        total: total
+    };
 };
 
 exports.create = async (patientData) => {

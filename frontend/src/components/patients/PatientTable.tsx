@@ -10,9 +10,12 @@ interface PatientTableProps {
     isLoading: boolean;
     onLaunchService: (patient: Patient) => void;
     onDeletePatient: (patientId: string) => void;
+    currentPage: number;
+    itemsPerPage: number;
+    totalItems: number;
 }
 
-export default function PatientTable({ patients, isLoading, onLaunchService, onDeletePatient }: PatientTableProps) {
+export default function PatientTable({ patients, isLoading, onLaunchService, onDeletePatient, currentPage, itemsPerPage, totalItems }: PatientTableProps) {
     const { user } = useAuthStore();
 
     if (isLoading) {
@@ -23,8 +26,14 @@ export default function PatientTable({ patients, isLoading, onLaunchService, onD
         return <div className="text-center p-8 bg-white rounded-lg shadow">Nenhum paciente encontrado.</div>
     }
 
+    const firstItem = (currentPage - 1) * itemsPerPage + 1;
+    const lastItem = firstItem + patients.length - 1;
+
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-4 text-sm text-gray-600 border-b">
+                Mostrando <span className="font-bold">{firstItem}</span> a <span className="font-bold">{lastItem}</span> de <span className="font-bold">{totalItems}</span> pacientes.
+            </div>
             {/* 1. A tabela tradicional é escondida em ecrãs pequenos (hidden) e só aparece em ecrãs médios para cima (md:table) */}
             <table className="min-w-full divide-y divide-gray-200 hidden md:table">
                 <thead className="bg-gray-50">

@@ -11,6 +11,7 @@ import { useState, useCallback } from "react";
 import LaunchServiceModal from "@/components/patients/LaunchServiceModal";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import Pagination from "@/components/ui/Pagination";
 
 export default function PacientesPage() {
     const router = useRouter();
@@ -20,11 +21,22 @@ export default function PacientesPage() {
     const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-    const handleSearch = useCallback(async (filters: Record<string, string>) => {
+    const [totalPatients, setTotalPatients] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [currentFilters, setCurrentFilters] = useState<Record<string, string>>({});
+    const ITEMS_PER_PAGE = 10;
+
+    const fetchPatients = useCallback(async (page: number, filters: Record<string, string>) => {
         setIsLoading(true);
         try {
-            const response = await api.get('/patients', { params: filters });
-            setPatients(response.data);
+            const params = {
+                ...filters,
+                page: page.toString(),
+                limit: ITEMS_PER_PAGE.toString(),
+            };
+            const response = await api.get('/patients', { params });
+            setPatients(response.data.patients);
+            setTotalPatients(response.data.total);
         } catch (error) {
             console.error("Erro ao buscar pacientes:", error);
             toast.error("Falha ao buscar pacientes.");
@@ -32,6 +44,17 @@ export default function PacientesPage() {
             setIsLoading(false);
         }
     }, []);
+
+    const handleSearch = (filters: Record<string, string>) => {
+        setCurrentFilters(filters);
+        setCurrentPage(1);
+        fetchPatients(1, filters);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        fetchPatients(page, currentFilters);
+    };
 
     const handleDeletePatient = async (patientId: string) => {
         if (window.confirm("Tem a certeza que deseja apagar este paciente? Esta ação não pode ser revertida.")) {
@@ -75,6 +98,15 @@ export default function PacientesPage() {
                     isLoading={isLoading} 
                     onLaunchService={handleOpenLaunchModal} 
                     onDeletePatient={handleDeletePatient}
+                    currentPage={currentPage}
+                    itemsPerPage={ITEMS_PER_PAGE}
+                    totalItems={totalPatients}
+                />
+                <Pagination
+                    currentPage={currentPage}
+                    totalItems={totalPatients}
+                    itemsPerPage={ITEMS_PER_PAGE}
+                    onPageChange={handlePageChange}
                 />
             </main>
             <LaunchServiceModal

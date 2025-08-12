@@ -37,7 +37,7 @@ export default function AddPatientToList({ onPatientSelect }: AddPatientToListPr
         setHasSearched(true);
         try {
             const response = await api.get('/patients', { params: activeFilters });
-            setResults(response.data);
+            setResults(response.data.patients);
         } catch (error) {
             toast.error("Erro ao buscar pacientes.");
         } finally {

@@ -56,7 +56,7 @@ export default function NewAppointmentModal({ isOpen, onClose, onConfirm, slot, 
         setHasSearched(true);
         try {
             const response = await api.get('/patients', { params: activeFilters });
-            setSuggestions(response.data);
+            setSuggestions(response.data.patients);
         } catch (error) {
             toast.error("Erro ao buscar pacientes.");
         } finally {

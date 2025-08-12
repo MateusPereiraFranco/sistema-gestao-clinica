@@ -114,13 +114,14 @@ export default function LoginPage() {
                     {isLoading ? 'A aguardar...' : 'Entrar'}
                   </button>
                 </div>
-                <div className="flex items-center justify-center">
+                {/*<div className="flex items-center justify-center">
                         <div className="text-sm">
                             <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
                                 Esqueceu a sua palavra-passe?
                             </Link>
                         </div>
                     </div>
+                */}
               </form>
             </div>
           </div>

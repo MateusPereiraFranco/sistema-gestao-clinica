@@ -55,7 +55,6 @@ export default function ProntuarioPage() {
         setIsLoading(true);
         setError(null);
         try {
-            console.log(withScheduledCheck);
             const response = await api.get(`/patients/${patientId}/history`, {
                 params: { startDate, endDate, professional_id: dashboardProfessional, withScheduled: withScheduledCheck }
             });
